@@ -54,6 +54,7 @@ import com.winlator.inputcontrols.ControlsProfile;
 import com.winlator.inputcontrols.ExternalController;
 import com.winlator.inputcontrols.InputControlsManager;
 import com.winlator.math.Mathf;
+import com.winlator.midi.MidiHandler;
 import com.winlator.renderer.GLRenderer;
 import com.winlator.widget.FrameRating;
 import com.winlator.widget.InputControlsView;
@@ -84,9 +85,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.Executors;
+
+import cn.sherlock.com.sun.media.sound.SF2Soundbank;
 
 public class XServerDisplayActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private XServerView xServerView;
@@ -120,6 +124,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private int frameRatingWindowId = -1;
     private ContentsManager contentsManager;
     private boolean navigationFocused = false;
+    private final MidiHandler midiHandler = new MidiHandler();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -127,6 +132,12 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         AppUtils.hideSystemUI(this);
         AppUtils.keepScreenOn(this);
         setContentView(R.layout.xserver_display_activity);
+
+        try {
+            midiHandler.setSoundBank(new SF2Soundbank(getAssets().open("soundfonts/microsoft.sf2")));
+        } catch (IOException e) {
+
+        }
 
         final PreloaderDialog preloaderDialog = new PreloaderDialog(this);
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -304,6 +315,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     @Override
     protected void onDestroy() {
         winHandler.stop();
+        midiHandler.stop();
         if (environment != null) environment.stopEnvironmentComponents();
         super.onDestroy();
     }
@@ -371,6 +383,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
     private void exit() {
         winHandler.stop();
+        midiHandler.stop();
         if (environment != null) environment.stopEnvironmentComponents();
         AppUtils.restartApplication(this);
     }
@@ -504,6 +517,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         winHandler.start();
         envVars.clear();
         dxwrapperConfig = null;
+        midiHandler.start();
     }
 
     private void setupUI() {

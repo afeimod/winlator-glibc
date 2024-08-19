@@ -57,4 +57,5 @@ dependencies {
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
     implementation(libs.zstd.jni) { artifact { type = 'aar' } }
+    implementation files('libs/SoftMidiSynth.jar')
 }
