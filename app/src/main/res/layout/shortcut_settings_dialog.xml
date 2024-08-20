@@ -159,6 +159,16 @@
             android:id="@+id/SAudioDriver"
             android:entries="@array/audio_driver_entries" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/midi_sound_font" />
+
+        <Spinner
+            style="@style/ComboBox"
+            android:layout_width="match_parent"
+            android:id="@+id/SMIDISoundFont" />
+
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/TabLayout"
             android:layout_width="match_parent"

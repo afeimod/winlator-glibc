@@ -1,11 +1,12 @@
 package com.winlator.core;
 
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.StatFs;
+import android.provider.OpenableColumns;
 import android.system.ErrnoException;
 import android.system.Os;
 
@@ -36,8 +37,7 @@ public abstract class FileUtils {
     public static byte[] read(Context context, String assetFile) {
         try (InputStream inStream = context.getAssets().open(assetFile)) {
             return StreamUtils.copyToByteArray(inStream);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             return null;
         }
     }
@@ -45,8 +45,7 @@ public abstract class FileUtils {
     public static byte[] read(File file) {
         try (InputStream inStream = new BufferedInputStream(new FileInputStream(file))) {
             return StreamUtils.copyToByteArray(inStream);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             return null;
         }
     }
@@ -66,8 +65,7 @@ public abstract class FileUtils {
             String line;
             while ((line = reader.readLine()) != null) sb.append(line);
             return sb.toString();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             return null;
         }
     }
@@ -76,8 +74,7 @@ public abstract class FileUtils {
         try (OutputStream os = new FileOutputStream(file)) {
             os.write(data, 0, data.length);
             return true;
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return false;
@@ -88,8 +85,7 @@ public abstract class FileUtils {
             bw.write(data);
             bw.flush();
             return true;
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return false;
@@ -103,8 +99,8 @@ public abstract class FileUtils {
         try {
             (new File(linkFile)).delete();
             Os.symlink(linkTarget, linkFile);
+        } catch (ErrnoException e) {
         }
-        catch (ErrnoException e) {}
     }
 
     public static boolean isSymlink(File file) {
@@ -137,8 +133,7 @@ public abstract class FileUtils {
         if (targetFile.isDirectory()) {
             String[] files = targetFile.list();
             return files == null || files.length == 0;
-        }
-        else return targetFile.length() == 0;
+        } else return targetFile.length() == 0;
     }
 
     public static boolean copy(File srcFile, File dstFile) {
@@ -159,10 +154,10 @@ public abstract class FileUtils {
                     }
                 }
             }
-        }
-        else {
+        } else {
             File parent = dstFile.getParentFile();
-            if (!srcFile.exists() || (parent != null && !parent.exists() && !parent.mkdirs())) return false;
+            if (!srcFile.exists() || (parent != null && !parent.exists() && !parent.mkdirs()))
+                return false;
 
             try {
                 FileChannel inChannel = (new FileInputStream(srcFile)).getChannel();
@@ -173,8 +168,7 @@ public abstract class FileUtils {
 
                 if (callback != null) callback.call(dstFile);
                 return dstFile.exists();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 return false;
             }
         }
@@ -187,25 +181,38 @@ public abstract class FileUtils {
             try {
                 String[] filenames = context.getAssets().list(assetFile);
                 for (String filename : filenames) {
-                    String relativePath = StringUtils.addEndSlash(assetFile)+filename;
+                    String relativePath = StringUtils.addEndSlash(assetFile) + filename;
                     if (isDirectory(context, relativePath)) {
                         copy(context, relativePath, new File(dstFile, filename));
-                    }
-                    else copy(context, relativePath, dstFile);
+                    } else copy(context, relativePath, dstFile);
                 }
+            } catch (IOException e) {
             }
-            catch (IOException e) {}
-        }
-        else {
+        } else {
             if (dstFile.isDirectory()) dstFile = new File(dstFile, FileUtils.getName(assetFile));
             File parent = dstFile.getParentFile();
             if (!parent.isDirectory()) parent.mkdirs();
             try (InputStream inStream = context.getAssets().open(assetFile);
                  BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(dstFile), StreamUtils.BUFFER_SIZE)) {
                 StreamUtils.copy(inStream, outStream);
+            } catch (IOException e) {
             }
-            catch (IOException e) {}
         }
+    }
+
+    public static boolean copy(Context context, Uri uri, File dest) {
+        try (InputStream inputStream = context.getContentResolver().openInputStream(uri);
+             OutputStream outputStream = new FileOutputStream(dest)) {
+            byte[] buffer = new byte[1024];
+            int length;
+
+            while ((length = inputStream.read(buffer)) > 0)
+                outputStream.write(buffer, 0, length);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     public static ArrayList<String> readLines(File file) {
@@ -214,8 +221,7 @@ public abstract class FileUtils {
             BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
             String line;
             while ((line = reader.readLine()) != null) lines.add(line);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return lines;
@@ -242,15 +248,15 @@ public abstract class FileUtils {
     public static void chmod(File file, int mode) {
         try {
             Os.chmod(file.getAbsolutePath(), mode);
+        } catch (ErrnoException e) {
         }
-        catch (ErrnoException e) {}
     }
 
     public static File createTempFile(File parent, String prefix) {
         File tempFile = null;
         boolean exists = true;
         while (exists) {
-            tempFile = new File(parent, prefix+"-"+ UUID.randomUUID().toString().replace("-", "")+".tmp");
+            tempFile = new File(parent, prefix + "-" + UUID.randomUUID().toString().replace("-", "") + ".tmp");
             exists = tempFile.exists();
         }
         return tempFile;
@@ -260,7 +266,8 @@ public abstract class FileUtils {
         String path = null;
         if (uri.getAuthority().equals("com.android.externalstorage.documents")) {
             String[] parts = uri.getLastPathSegment().split(":");
-            if (parts[0].equalsIgnoreCase("primary")) path = Environment.getExternalStorageDirectory() + "/" + parts[1];
+            if (parts[0].equalsIgnoreCase("primary"))
+                path = Environment.getExternalStorageDirectory() + "/" + parts[1];
         }
         return path;
     }
@@ -275,8 +282,7 @@ public abstract class FileUtils {
                 if (data != inStream2.read()) return false;
             }
             return true;
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             return false;
         }
     }
@@ -302,8 +308,7 @@ public abstract class FileUtils {
             for (File f : files) {
                 if (f.isDirectory()) {
                     stack.push(f);
-                }
-                else {
+                } else {
                     long length = f.length();
                     if (length > 0) callback.call(length);
                 }
@@ -314,8 +319,7 @@ public abstract class FileUtils {
     public static long getSize(Context context, String assetFile) {
         try (InputStream inStream = context.getAssets().open(assetFile)) {
             return inStream.available();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             return 0;
         }
     }
@@ -332,14 +336,13 @@ public abstract class FileUtils {
         try {
             String[] files = context.getAssets().list(assetFile);
             return files != null && files.length > 0;
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             return false;
         }
     }
 
     public static String toRelativePath(String basePath, String fullPath) {
-        return StringUtils.removeEndSlash((fullPath.startsWith("/") ? "/" : "")+(new File(basePath).toURI().relativize(new File(fullPath).toURI()).getPath()));
+        return StringUtils.removeEndSlash((fullPath.startsWith("/") ? "/" : "") + (new File(basePath).toURI().relativize(new File(fullPath).toURI()).getPath()));
     }
 
     public static int readInt(String path) {
@@ -349,16 +352,15 @@ public abstract class FileUtils {
                 String line = reader.readLine();
                 result = !line.isEmpty() ? Integer.parseInt(line) : 0;
             }
+        } catch (Exception e) {
         }
-        catch (Exception e) {}
         return result;
     }
 
     public static String readSymlink(File file) {
         try {
             return Files.readSymbolicLink(file.toPath()).toString();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             return "";
         }
     }
@@ -394,5 +396,19 @@ public abstract class FileUtils {
         } catch (Exception e) {
             return "";
         }
+    }
+
+    public static String getUriFileName(Context context, Uri uri) {
+        String fileName = null;
+        Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+            if (nameIndex != -1)
+                fileName = cursor.getString(nameIndex);
+            cursor.close();
+        }
+
+        return fileName;
     }
 }

@@ -142,7 +142,7 @@ public class ContainersFragment extends Fragment {
                         if (!XrActivity.isSupported()) {
                             Intent intent = new Intent(context, XServerDisplayActivity.class);
                             intent.putExtra("container_id", container.id);
-                            context.startActivity(intent);
+                            requireActivity().startActivity(intent);
                         }
                         else XrActivity.openIntent(getActivity(), container.id, null);
                         break;

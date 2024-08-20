@@ -51,6 +51,7 @@ public class Container {
     private File rootDir;
     private JSONObject extraData;
     private int rcfileId = 0;
+    private String midiSoundFont = "";
 
     public Container(int id) {
         this.id = id;
@@ -269,6 +270,14 @@ public class Container {
         rcfileId = id;
     }
 
+    public String getMIDISoundFont() {
+        return midiSoundFont;
+    }
+
+    public void setMidiSoundFont(String fileName) {
+        midiSoundFont = fileName;
+    }
+
     public Iterable<String[]> drivesIterator() {
         return drivesIterator(drives);
     }
@@ -316,6 +325,7 @@ public class Container {
             data.put("desktopTheme", desktopTheme);
             data.put("extraData", extraData);
             data.put("rcfileId", rcfileId);
+            data.put("midiSoundFont", midiSoundFont);
 
             if (!WineInfo.isMainWineVersion(wineVersion)) data.put("wineVersion", wineVersion);
             FileUtils.writeString(getConfigFile(), data.toString());
@@ -393,6 +403,9 @@ public class Container {
                     break;
                 case "rcfileId" :
                     setRcfileId(data.getInt(key));
+                    break;
+                case "midiSoundFont":
+                    setMidiSoundFont(data.getString(key));
                     break;
             }
         }
