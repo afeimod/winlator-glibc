@@ -46,6 +46,7 @@ import com.winlator.core.StringUtils;
 import com.winlator.core.WineInfo;
 import com.winlator.core.WineUtils;
 import com.winlator.inputcontrols.ExternalController;
+import com.winlator.midi.MidiManager;
 import com.winlator.xenvironment.ImageFs;
 import com.winlator.xenvironment.ImageFsInstaller;
 
@@ -61,6 +62,7 @@ import java.util.concurrent.Executors;
 public class SettingsFragment extends Fragment {
     public static final String DEFAULT_WINE_DEBUG_CHANNELS = "warn,err,fixme";
     private Callback<Uri> selectWineFileCallback;
+    private Callback<Uri> installSoundFontCallback;
     private PreloaderDialog preloaderDialog;
     private SharedPreferences preferences;
 
@@ -80,13 +82,18 @@ public class SettingsFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == MainActivity.OPEN_FILE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            try {
-                if (selectWineFileCallback != null && data != null) selectWineFileCallback.call(data.getData());
+            if (selectWineFileCallback != null) {
+                try {
+                    if (selectWineFileCallback != null && data != null) selectWineFileCallback.call(data.getData());
+                }
+                catch (Exception e) {
+                    AppUtils.showToast(getContext(), R.string.unable_to_import_profile);
+                }
+                selectWineFileCallback = null;
+            } else if (installSoundFontCallback != null) {
+                installSoundFontCallback.call(data.getData());
+                installSoundFontCallback = null;
             }
-            catch (Exception e) {
-                AppUtils.showToast(getContext(), R.string.unable_to_import_profile);
-            }
-            selectWineFileCallback = null;
         }
     }
 
@@ -117,6 +124,52 @@ public class SettingsFragment extends Fragment {
         final Spinner sBox86Preset = view.findViewById(R.id.SBox86Preset);
         final Spinner sBox64Preset = view.findViewById(R.id.SBox64Preset);
         loadBox86_64PresetSpinners(view, sBox86Preset, sBox64Preset);
+
+        final Spinner sMIDISoundFont = view.findViewById(R.id.SMIDISoundFont);
+        final View btInstallSF = view.findViewById(R.id.BTInstallSF);
+        final View btRemoveSF = view.findViewById(R.id.BTRemoveSF);
+
+        MidiManager.loadSFSpinnerWithoutDisabled(sMIDISoundFont);
+        btInstallSF.setOnClickListener(v -> {
+            installSoundFontCallback = uri -> {
+                PreloaderDialog dialog = new PreloaderDialog(requireActivity());
+                dialog.showOnUiThread(R.string.installing_content);
+                MidiManager.installSF2File(context, uri, new MidiManager.OnSoundFontInstalledCallback() {
+                    @Override
+                    public void onSuccess() {
+                        dialog.closeOnUiThread();
+                        requireActivity().runOnUiThread(() -> {
+                            ContentDialog.alert(context, R.string.sound_font_installed_success, null);
+                            MidiManager.loadSFSpinnerWithoutDisabled(sMIDISoundFont);
+                        });
+                    }
+
+                    @Override
+                    public void onFailed(int reason) {
+                        dialog.closeOnUiThread();
+                        int resId = switch (reason) {
+                            case MidiManager.ERROR_BADFORMAT -> R.string.sound_font_bad_format;
+                            case MidiManager.ERROR_EXIST -> R.string.sound_font_already_exist;
+                            default -> R.string.sound_font_installed_failed;
+                        };
+                        requireActivity().runOnUiThread(() -> ContentDialog.alert(context, resId, null));
+                    }
+                });
+            };
+            openFile();
+        });
+        btRemoveSF.setOnClickListener(v -> {
+            if (sMIDISoundFont.getSelectedItemPosition() != 0) {
+                ContentDialog.confirm(context, R.string.do_you_want_to_remove_this_sound_font, () -> {
+                    if (MidiManager.removeSF2File(context, sMIDISoundFont.getSelectedItem().toString())) {
+                        AppUtils.showToast(context, R.string.sound_font_removed_success);
+                        MidiManager.loadSFSpinnerWithoutDisabled(sMIDISoundFont);
+                    } else
+                        AppUtils.showToast(context, R.string.sound_font_removed_failed);
+                });
+            } else
+                AppUtils.showToast(context, R.string.cannot_remove_default_sound_font);
+        });
 
         final CheckBox cbUseDRI3 = view.findViewById(R.id.CBUseDRI3);
         cbUseDRI3.setChecked(preferences.getBoolean("use_dri3", true));
@@ -336,7 +389,10 @@ public class SettingsFragment extends Fragment {
                 }
             });
         };
+        openFile();
+    }
 
+    private void openFile() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");

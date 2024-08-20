@@ -55,6 +55,7 @@ import com.winlator.inputcontrols.ExternalController;
 import com.winlator.inputcontrols.InputControlsManager;
 import com.winlator.math.Mathf;
 import com.winlator.midi.MidiHandler;
+import com.winlator.midi.MidiManager;
 import com.winlator.renderer.GLRenderer;
 import com.winlator.widget.FrameRating;
 import com.winlator.widget.InputControlsView;
@@ -85,7 +86,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.Executors;
@@ -124,7 +125,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private int frameRatingWindowId = -1;
     private ContentsManager contentsManager;
     private boolean navigationFocused = false;
-    private final MidiHandler midiHandler = new MidiHandler();
+    private MidiHandler midiHandler;
+    private String midiSoundFont = "";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -133,11 +135,6 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         AppUtils.keepScreenOn(this);
         setContentView(R.layout.xserver_display_activity);
 
-        try {
-            midiHandler.setSoundBank(new SF2Soundbank(getAssets().open("soundfonts/microsoft.sf2")));
-        } catch (IOException e) {
-
-        }
 
         final PreloaderDialog preloaderDialog = new PreloaderDialog(this);
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -211,6 +208,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
             graphicsDriver = container.getGraphicsDriver();
             audioDriver = container.getAudioDriver();
+            midiSoundFont = container.getMIDISoundFont();
             dxwrapper = container.getDXWrapper();
             String dxwrapperConfig = container.getDXWrapperConfig();
             screenSize = container.getScreenSize();
@@ -218,6 +216,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             if (shortcut != null) {
                 graphicsDriver = shortcut.getExtra("graphicsDriver", container.getGraphicsDriver());
                 audioDriver = shortcut.getExtra("audioDriver", container.getAudioDriver());
+                midiSoundFont = shortcut.getExtra("midiSoundFont", container.getMIDISoundFont());
                 dxwrapper = shortcut.getExtra("dxwrapper", container.getDXWrapper());
                 dxwrapperConfig = shortcut.getExtra("dxwrapperConfig", container.getDXWrapperConfig());
                 screenSize = shortcut.getExtra("screenSize", container.getScreenSize());
@@ -271,6 +270,33 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             }
         });
 
+        if (!midiSoundFont.equals("")) {
+            InputStream in = null;
+            InputStream finalIn = in;
+            MidiManager.OnMidiLoadedCallback callback = new MidiManager.OnMidiLoadedCallback() {
+                @Override
+                public void onSuccess(SF2Soundbank soundbank) {
+                    midiHandler = new MidiHandler();
+                    midiHandler.setSoundBank(soundbank);
+                    midiHandler.start();
+                }
+
+                @Override
+                public void onFailed(Exception e) {
+                    try {
+                        finalIn.close();
+                    } catch (Exception e2) {}
+                }
+            };
+            try {
+                if (midiSoundFont.equals(MidiManager.DEFAULT_SF2_FILE)) {
+                    in = getAssets().open(MidiManager.SF2_ASSETS_DIR + "/" + midiSoundFont);
+                    MidiManager.load(in, callback);
+                } else
+                    MidiManager.load(new File(MidiManager.getSoundFontDir(this), midiSoundFont), callback);
+            } catch (Exception e) {}
+        }
+
         setupUI();
 
         Executors.newSingleThreadExecutor().execute(() -> {
@@ -315,7 +341,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     @Override
     protected void onDestroy() {
         winHandler.stop();
-        midiHandler.stop();
+        if (midiHandler != null)
+            midiHandler.stop();
         if (environment != null) environment.stopEnvironmentComponents();
         super.onDestroy();
     }
@@ -510,7 +537,6 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         winHandler.start();
         envVars.clear();
         dxwrapperConfig = null;
-        midiHandler.start();
     }
 
     private void setupUI() {

@@ -8,6 +8,8 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import cn.sherlock.com.sun.media.sound.SF2Soundbank;
 import cn.sherlock.com.sun.media.sound.SoftSynthesizer;
@@ -25,18 +27,18 @@ public class MidiHandler {
     private final DatagramPacket receivePacket = new DatagramPacket(receiveData.array(), BUF_SIZE);
     private SoftSynthesizer synth;
     private Receiver recv;
+    private SF2Soundbank sf2SoundBank;
+    private long lastMidiMsgTime = 0;
+    private ShortMessage message = new ShortMessage();
+    private ScheduledExecutorService scheduler;
+    private static final long CHECK_DELAY = 500;
 
     public void setSoundBank(SF2Soundbank soundBank) {
-        if (synth != null)
-            synth.close();
-
-        try {
-            synth = new SoftSynthesizer();
-            synth.open();
-            synth.loadAllInstruments(soundBank);
-            recv = synth.getReceiver();
-        } catch (Exception e) {}
+        clearRecv();
+        clearSynth();
+        this.sf2SoundBank = soundBank;
     }
+
     public void start() {
         running = true;
         Executors.newSingleThreadExecutor().execute(() -> {
@@ -49,10 +51,12 @@ public class MidiHandler {
                     socket.receive(receivePacket);
                     receiveData.rewind();
                     handleRequest(receiveData);
+
                 }
             } catch (IOException e) {
             }
         });
+        startMidiDataChecking();
     }
 
     public void stop() {
@@ -62,20 +66,109 @@ public class MidiHandler {
             socket.close();
             socket = null;
         }
+
+        clearRecv();
+        clearSynth();
+
+        scheduler.shutdown();
+        scheduler = null;
     }
 
     private void handleRequest(ByteBuffer received) {
         byte requestCode = received.get();
         switch (requestCode) {
             case RequestCodes.MIDI_SHORT:
-                try {
-                    recv.send(new ShortMessage(received.get(), received.get(), received.get()), -1);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if (recv != null) {
+                    try {
+                        lastMidiMsgTime = System.currentTimeMillis();
+                        message.setMessage(received.get(), received.get(), received.get());
+                        recv.send(message, -1);
+                    } catch (Exception e) {}
                 }
                 break;
             case RequestCodes.MIDI_LONG:
+                // FIXME: not implemented.
+                break;
+            case RequestCodes.MIDI_PREPARE:
+                // stub
+                break;
+            case RequestCodes.MIDI_UNPREPARE:
+                // stub
+                break;
+            case RequestCodes.MIDI_OPEN:
+                if (synth == null || recv == null) {
+                    clearRecv();
+                    clearSynth();
+                    prepareSynthAndRecv();
+                }
+                break;
+            case RequestCodes.MIDI_CLOSE:
+                clearRecv();
+                clearSynth();
+                break;
+            case RequestCodes.MIDI_RESET:
+                // stub
                 break;
         }
+    }
+
+    private void clearRecv() {
+        if (recv != null) {
+            recv.close();
+            recv = null;
+        }
+    }
+
+    private void clearSynth() {
+        if (synth != null) {
+            synth.close();
+            synth = null;
+        }
+    }
+
+    private void prepareSynthAndRecv() {
+        try {
+            synth = new SoftSynthesizer();
+            synth.open();
+            synth.loadAllInstruments(sf2SoundBank);
+            recv = synth.getReceiver();
+        } catch (Exception e) {
+            clearRecv();
+            clearSynth();
+        }
+    }
+
+    private void sendAllOff() {
+        // FIXME: A bad implement.
+        if (recv != null) {
+            try {
+                ShortMessage msg = new ShortMessage();
+                for (int i = 0; i < 128; i++) {
+                    for (int j = 0; j < 16; j++) {
+                        msg.setMessage(ShortMessage.NOTE_OFF, j, i, 0);
+                        recv.send(msg, -1);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void startMidiDataChecking() {
+        // FIXME: A bad implement.
+        //  Since this synth doesn't supported 0xB0 0x7B 0x00 as ALL_NOTES_OFF
+        if (scheduler != null)
+            scheduler.shutdown();
+
+        scheduler = Executors.newScheduledThreadPool(1);
+        Runnable checkTask = () -> {
+            long currentTime = System.currentTimeMillis();
+            if (lastMidiMsgTime != 0 && currentTime - lastMidiMsgTime > (CHECK_DELAY /2)) {
+                sendAllOff();
+                lastMidiMsgTime = 0;
+            }
+        };
+        scheduler.scheduleWithFixedDelay(checkTask, 0, CHECK_DELAY, TimeUnit.MILLISECONDS);
     }
 }

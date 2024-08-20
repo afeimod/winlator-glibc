@@ -46,6 +46,7 @@ import com.winlator.core.WineInfo;
 import com.winlator.core.WineRegistryEditor;
 import com.winlator.core.WineThemeManager;
 import com.winlator.core.WineUtils;
+import com.winlator.midi.MidiManager;
 import com.winlator.widget.CPUListView;
 import com.winlator.widget.ColorPickerView;
 import com.winlator.widget.EnvVarsView;
@@ -152,6 +153,10 @@ public class ContainerDetailFragment extends Fragment {
         Spinner sAudioDriver = view.findViewById(R.id.SAudioDriver);
         AppUtils.setSpinnerSelectionFromIdentifier(sAudioDriver, isEditMode() ? container.getAudioDriver() : Container.DEFAULT_AUDIO_DRIVER);
 
+        Spinner sMIDISoundFont = view.findViewById(R.id.SMIDISoundFont);
+        MidiManager.loadSFSpinner(sMIDISoundFont);
+        AppUtils.setSpinnerSelectionFromValue(sMIDISoundFont, container.getMIDISoundFont());
+
         final CheckBox cbShowFPS = view.findViewById(R.id.CBShowFPS);
         cbShowFPS.setChecked(isEditMode() && container.isShowFPS());
 
@@ -195,6 +200,7 @@ public class ContainerDetailFragment extends Fragment {
                 String dxwrapper = StringUtils.parseIdentifier(sDXWrapper.getSelectedItem());
                 String dxwrapperConfig = vDXWrapperConfig.getTag().toString();
                 String audioDriver = StringUtils.parseIdentifier(sAudioDriver.getSelectedItem());
+                String midiSoundFont = sMIDISoundFont.getSelectedItemPosition() == 0 ? "" : sMIDISoundFont.getSelectedItem().toString();
                 String wincomponents = getWinComponents(view);
                 String drives = getDrives(view);
                 boolean showFPS = cbShowFPS.isChecked();
@@ -226,6 +232,7 @@ public class ContainerDetailFragment extends Fragment {
                     container.setBox64Preset(box64Preset);
                     container.setDesktopTheme(desktopTheme);
                     container.setRcfileId(rcfileId);
+                    container.setMidiSoundFont(midiSoundFont);
                     container.saveData();
                     saveWineRegistryKeys(view);
                     getActivity().onBackPressed();
@@ -250,6 +257,7 @@ public class ContainerDetailFragment extends Fragment {
                     data.put("box64Preset", box64Preset);
                     data.put("desktopTheme", desktopTheme);
                     data.put("rcfileId", rcfileId);
+                    data.put("midiSoundFont", midiSoundFont);
                     data.put("wineVersion", sWineVersion.getSelectedItem().toString());
 
                     preloaderDialog.show(R.string.creating_container);
