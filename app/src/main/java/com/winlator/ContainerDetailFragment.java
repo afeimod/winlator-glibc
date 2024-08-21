@@ -155,7 +155,7 @@ public class ContainerDetailFragment extends Fragment {
 
         Spinner sMIDISoundFont = view.findViewById(R.id.SMIDISoundFont);
         MidiManager.loadSFSpinner(sMIDISoundFont);
-        AppUtils.setSpinnerSelectionFromValue(sMIDISoundFont, container.getMIDISoundFont());
+        AppUtils.setSpinnerSelectionFromValue(sMIDISoundFont, isEditMode() ? container.getMIDISoundFont() : "");
 
         final CheckBox cbShowFPS = view.findViewById(R.id.CBShowFPS);
         cbShowFPS.setChecked(isEditMode() && container.isShowFPS());
