@@ -181,10 +181,10 @@
     <string name="startup_selection">启动选项</string>
     <string name="wine_debug_channel">Wine 调试频道</string>
     <string name="game_controller">游戏控制器</string>
-    <string name="as_button">作为按钮</string>
-    <string name="as_axis">作为轴</string>
+    <string name="as_button">按钮</string>
+    <string name="as_axis">轴</string>
     <string name="both">两者</string>
-    <string name="trigger_mode">扳机键模式</string>
+    <string name="trigger_type">扳机键类型</string>
     <string name="use_glibc">使用本地 Glibc 替代 Proot</string>
     <string name="experimental">实验性的</string>
     <string name="glibc_exp_edition">Glibc 实验性版本</string>
@@ -258,4 +258,5 @@
     <string name="installing_soundfont">正在安装音色库…</string>
     <string name="sound_font_bad_format">音色库格式不正确。</string>
     <string name="cannot_remove_default_sound_font">不能删除默认音色库</string>
+    <string name="mixed">混合</string>
 </resources>

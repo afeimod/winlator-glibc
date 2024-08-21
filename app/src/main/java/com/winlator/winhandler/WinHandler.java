@@ -45,7 +45,7 @@ public class WinHandler {
     private final XServerDisplayActivity activity;
     private final List<Integer> gamepadClients = new CopyOnWriteArrayList<>();
     private SharedPreferences preferences;
-    private byte triggerMode;
+    private byte triggerType;
 
     public WinHandler(XServerDisplayActivity activity) {
         this.activity = activity;
@@ -233,7 +233,7 @@ public class WinHandler {
             case RequestCodes.INIT: {
                 initReceived = true;
                 preferences = PreferenceManager.getDefaultSharedPreferences(activity.getBaseContext());
-                triggerMode = (byte) preferences.getInt("trigger_mode", ExternalController.TRIGGER_AS_AXIS);
+                triggerType = (byte) preferences.getInt("trigger_type", ExternalController.TRIGGER_IS_AXIS);
 
                 synchronized (actions) {
                     actions.notify();
@@ -266,7 +266,7 @@ public class WinHandler {
                 if (!useVirtualGamepad && (currentController == null || !currentController.isConnected())) {
                     currentController = ExternalController.getController(0);
                     if (currentController != null)
-                        currentController.setTriggerMode(triggerMode);
+                        currentController.setTriggerType(triggerType);
                 }
 
                 final boolean enabled = currentController != null || useVirtualGamepad;

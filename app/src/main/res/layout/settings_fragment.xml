@@ -290,34 +290,34 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/trigger_mode"/>
+                        android:text="@string/trigger_type"/>
 
                     <RadioGroup
-                        android:id="@+id/RGTriggerMode"
+                        android:id="@+id/RGTriggerType"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
                         <RadioButton
-                            android:id="@+id/RBTriggerAsButton"
+                            android:id="@+id/RBTriggerIsButton"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/as_button"/>
 
                         <RadioButton
-                            android:id="@+id/RBTriggerAsAxis"
+                            android:id="@+id/RBTriggerIsAxis"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/as_axis"/>
 
                         <RadioButton
-                            android:id="@+id/RBTriggerAsBoth"
+                            android:id="@+id/RBTriggerIsMixed"
                             android:visibility="gone"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="@string/both"/>
+                            android:text="@string/mixed"/>
                     </RadioGroup>
                 </LinearLayout>
 
