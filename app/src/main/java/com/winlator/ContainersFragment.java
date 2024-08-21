@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.winlator.container.Container;
 import com.winlator.container.ContainerManager;
+import com.winlator.container.Shortcut;
 import com.winlator.contentdialog.ContentDialog;
 import com.winlator.contentdialog.StorageInfoDialog;
 import com.winlator.core.PreloaderDialog;
@@ -165,6 +166,10 @@ public class ContainersFragment extends Fragment {
                     case R.id.container_remove:
                         ContentDialog.confirm(getContext(), R.string.do_you_want_to_remove_this_container, () -> {
                             preloaderDialog.show(R.string.removing_container);
+                            for (Shortcut shortcut : manager.loadShortcuts()) {
+                                if (shortcut.container == container)
+                                    ShortcutsFragment.disableShortcutOnScreen(context, shortcut);
+                            }
                             manager.removeContainerAsync(container, () -> {
                                 preloaderDialog.close();
                                 loadContainersList();

@@ -131,7 +131,7 @@ public class ShortcutsFragment extends Fragment {
                 else if (itemId == R.id.shortcut_remove) {
                     ContentDialog.confirm(context, R.string.do_you_want_to_remove_this_shortcut, () -> {
                         if (shortcut.file.delete() && shortcut.iconFile != null) shortcut.iconFile.delete();
-                        disableShortcutOnScreen(shortcut);
+                        disableShortcutOnScreen(requireContext(), shortcut);
                         loadShortcutsList();
                     });
                 }
@@ -179,11 +179,11 @@ public class ShortcutsFragment extends Fragment {
                     shortcut.file.getPath(), Icon.createWithBitmap(shortcut.icon), shortcut.getExtra("uuid")), null);
     }
 
-    private void disableShortcutOnScreen(Shortcut shortcut) {
-        ShortcutManager shortcutManager = getSystemService(requireContext(), ShortcutManager.class);
+    public static void disableShortcutOnScreen(Context context, Shortcut shortcut) {
+        ShortcutManager shortcutManager = getSystemService(context, ShortcutManager.class);
         try {
             shortcutManager.disableShortcuts(Collections.singletonList(shortcut.getExtra("uuid")),
-                    requireContext().getString(R.string.shortcut_not_available));
+                    context.getString(R.string.shortcut_not_available));
         } catch (Exception e) {}
     }
 
