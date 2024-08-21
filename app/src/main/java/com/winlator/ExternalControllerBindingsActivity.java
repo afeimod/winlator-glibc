@@ -116,11 +116,9 @@ public class ExternalControllerBindingsActivity extends AppCompatActivity {
                 }
 
                 keyCode = ExternalControllerBinding.getKeyCodeForAxis(axes[i], sign);
-                break;
+                updateControllerBinding(keyCode, binding);
             }
         }
-
-        updateControllerBinding(keyCode, binding);
     }
 
     @Override
