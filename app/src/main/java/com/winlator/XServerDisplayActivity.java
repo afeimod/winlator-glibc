@@ -212,6 +212,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             dxwrapper = container.getDXWrapper();
             String dxwrapperConfig = container.getDXWrapperConfig();
             screenSize = container.getScreenSize();
+            winHandler.setInputType((byte) container.getInputType());
 
             if (shortcut != null) {
                 graphicsDriver = shortcut.getExtra("graphicsDriver", container.getGraphicsDriver());
@@ -221,8 +222,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 dxwrapperConfig = shortcut.getExtra("dxwrapperConfig", container.getDXWrapperConfig());
                 screenSize = shortcut.getExtra("screenSize", container.getScreenSize());
 
-                String dinputMapperType = shortcut.getExtra("dinputMapperType");
-                if (!dinputMapperType.isEmpty()) winHandler.setDInputMapperType(Byte.parseByte(dinputMapperType));
+                String inputType = shortcut.getExtra("inputType");
+                if (!inputType.isEmpty()) winHandler.setInputType(Byte.parseByte(inputType));
             }
 
             if (dxwrapper.equals("dxvk") || dxwrapper.equals("vkd3d")) this.dxwrapperConfig = DXVKConfigDialog.parseConfig(dxwrapperConfig);

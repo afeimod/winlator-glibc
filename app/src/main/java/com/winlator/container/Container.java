@@ -8,6 +8,7 @@ import com.winlator.core.FileUtils;
 import com.winlator.core.KeyValueSet;
 import com.winlator.core.WineInfo;
 import com.winlator.core.WineThemeManager;
+import com.winlator.winhandler.WinHandler;
 import com.winlator.xenvironment.ImageFs;
 
 import org.json.JSONException;
@@ -52,6 +53,7 @@ public class Container {
     private JSONObject extraData;
     private int rcfileId = 0;
     private String midiSoundFont = "";
+    private int inputType = WinHandler.DEFAULT_INPUT_TYPE;
 
     public Container(int id) {
         this.id = id;
@@ -278,6 +280,14 @@ public class Container {
         midiSoundFont = fileName;
     }
 
+    public int getInputType() {
+        return inputType;
+    }
+
+    public void setInputType(int inputType) {
+        this.inputType = inputType;
+    }
+
     public Iterable<String[]> drivesIterator() {
         return drivesIterator(drives);
     }
@@ -318,6 +328,7 @@ public class Container {
             data.put("wincomponents", wincomponents);
             data.put("drives", drives);
             data.put("showFPS", showFPS);
+            data.put("inputType", inputType);
             data.put("wow64Mode", wow64Mode);
             data.put("startupSelection", startupSelection);
             data.put("box86Preset", box86Preset);
@@ -374,6 +385,9 @@ public class Container {
                 case "showFPS" :
                     setShowFPS(data.getBoolean(key));
                     break;
+                case "inputType" :
+                    setInputType(data.getInt(key));
+                    break;
                 case "wow64Mode" :
                     setWoW64Mode(data.getBoolean(key));
                     break;
@@ -404,7 +418,7 @@ public class Container {
                 case "rcfileId" :
                     setRcfileId(data.getInt(key));
                     break;
-                case "midiSoundFont":
+                case "midiSoundFont" :
                     setMidiSoundFont(data.getString(key));
                     break;
             }

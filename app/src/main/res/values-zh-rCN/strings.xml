@@ -259,4 +259,17 @@
     <string name="sound_font_bad_format">音色库格式不正确。</string>
     <string name="cannot_remove_default_sound_font">不能删除默认音色库</string>
     <string name="mixed">混合</string>
+    <string name="enable_dinput_for_wine_game">为 Wine 游戏启用 DInput</string>
+    <string name="enable_xinput_for_wine_game">为 Wine 游戏启用 XInput</string>
+    <string name="dinput_legacy">传统 （传统的游戏手柄）</string>
+    <string name="dinput_modern">现代 （类似于XInput）</string>
+    <string name="help_xinput"><![CDATA[
+        如果你的游戏使用<i><b>XInput API</b></i>提供游戏控制器支持, 请启用该选项。<br/><br/>
+        该选项会同时影响到<i><b>虚拟的</b></i>(由输入控件提供的)和<i><b>物理的</b></i>游戏控制器。
+    ]]></string>
+    <string name="help_dinput"><![CDATA[
+        如果你的游戏使用<i><b>DInput API</b></i>提供游戏控制器支持, 请启用该选项。<br/><br/>
+        该选项会同时影响到<i><b>虚拟的</b></i>(由输入控件提供的)和<i><b>物理的</b></i>游戏控制器。
+    ]]></string>
+    <string name="enable_xinput_and_dinput_same_time">某些游戏可能支持两种 API。对于这类游戏，若同时启用 XInput 和 DInput 可能会导致控制问题，例如在《以撒的结合》和《生化危机》系列中所见。</string>
 </resources>
