@@ -58,8 +58,11 @@
     </string-array>
     <string-array name="dxvk_framerate_entries">
         <item>0 (Default)</item>
+        <item>15</item>
         <item>30</item>
+        <item>45</item>
         <item>60</item>
+        <item>90</item>
         <item>120</item>
     </string-array>
     <string-array name="wincomponent_entries">
@@ -75,8 +78,8 @@
         <item>0.3.0</item>
     </string-array>
     <string-array name="dinput_mapper_type_entries">
-        <item>Standard (Old Gamepads)</item>
-        <item>XInput</item>
+        <item>@string/dinput_legacy</item>
+        <item>@string/dinput_modern</item>
     </string-array>
     <string-array name="desktop_theme_entries">
         <item>Light</item>
@@ -87,9 +90,9 @@
         <item>Solid Color</item>
     </string-array>
     <string-array name="startup_selection_entries">
-        <item>Normal (Load all services)</item>
-        <item>Essential (Load only essential services)</item>
-        <item>Aggressive (Stop services on startup)</item>
+        <item>@string/startup_normal</item>
+        <item>@string/startup_essential</item>
+        <item>@string/startup_aggressive</item>
     </string-array>
     <string-array name="vkd3d_version_entries">
         <item>2.12</item>

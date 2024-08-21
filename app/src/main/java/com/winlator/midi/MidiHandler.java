@@ -31,7 +31,7 @@ public class MidiHandler {
     private long lastMidiMsgTime = 0;
     private ShortMessage message = new ShortMessage();
     private ScheduledExecutorService scheduler;
-    private static final long CHECK_DELAY = 500;
+    private static final long CHECK_DELAY = 200;
 
     public void setSoundBank(SF2Soundbank soundBank) {
         clearRecv();
