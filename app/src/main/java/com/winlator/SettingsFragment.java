@@ -199,12 +199,12 @@ public class SettingsFragment extends Fragment {
         });
         sbCursorSpeed.setProgress((int)(preferences.getFloat("cursor_speed", 1.0f) * 100));
 
-        final RadioGroup rgTriggerMode = view.findViewById(R.id.RGTriggerMode);
-        List<Integer> triggerRbIds = List.of(R.id.RBTriggerAsButton, R.id.RBTriggerAsAxis, R.id.RBTriggerAsBoth);
-        int triggerMode = preferences.getInt("trigger_mode", ExternalController.TRIGGER_AS_AXIS);
+        final RadioGroup rgTriggerType = view.findViewById(R.id.RGTriggerType);
+        List<Integer> triggerRbIds = List.of(R.id.RBTriggerIsButton, R.id.RBTriggerIsAxis, R.id.RBTriggerIsMixed);
+        int triggerType = preferences.getInt("trigger_type", ExternalController.TRIGGER_IS_AXIS);
 
-        if (triggerMode >= 0 && triggerMode < triggerRbIds.size()) {
-            ((RadioButton) (rgTriggerMode.findViewById(triggerRbIds.get(triggerMode)))).setChecked(true);
+        if (triggerType >= 0 && triggerType < triggerRbIds.size()) {
+            ((RadioButton) (rgTriggerType.findViewById(triggerRbIds.get(triggerType)))).setChecked(true);
         }
 
         final CheckBox cbUseGlibc = view.findViewById(R.id.CBUseGlibc);
@@ -235,7 +235,7 @@ public class SettingsFragment extends Fragment {
             editor.putFloat("cursor_speed", sbCursorSpeed.getProgress() / 100.0f);
             editor.putBoolean("enable_wine_debug", cbEnableWineDebug.isChecked());
             editor.putBoolean("enable_box86_64_logs", cbEnableBox86_64Logs.isChecked());
-            editor.putInt("trigger_mode", triggerRbIds.indexOf(rgTriggerMode.getCheckedRadioButtonId()));
+            editor.putInt("trigger_type", triggerRbIds.indexOf(rgTriggerType.getCheckedRadioButtonId()));
             editor.putBoolean("use_glibc", cbUseGlibc.isChecked());
             editor.putBoolean("enable_file_provider", cbEnableFileProvider.isChecked());
 
