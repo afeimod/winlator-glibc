@@ -69,8 +69,10 @@ public class MidiHandler {
         clearRecv();
         clearSynth();
 
-        scheduler.shutdown();
-        scheduler = null;
+        if (scheduler != null) {
+            scheduler.shutdown();
+            scheduler = null;
+        }
     }
 
     private void handleRequest(ByteBuffer received) {
