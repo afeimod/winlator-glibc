@@ -56,7 +56,6 @@ public class MidiHandler {
             } catch (IOException e) {
             }
         });
-        startMidiDataChecking();
     }
 
     public void stop() {
@@ -100,11 +99,14 @@ public class MidiHandler {
                     clearRecv();
                     clearSynth();
                     prepareSynthAndRecv();
+                    startMidiDataChecking();
                 }
                 break;
             case RequestCodes.MIDI_CLOSE:
                 clearRecv();
                 clearSynth();
+                if (scheduler != null)
+                    scheduler.shutdown();
                 break;
             case RequestCodes.MIDI_RESET:
                 // stub
