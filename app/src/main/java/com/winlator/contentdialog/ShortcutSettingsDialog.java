@@ -190,7 +190,7 @@ public class ShortcutSettingsDialog extends ContentDialog {
                 int controlsProfile = sControlsProfile.getSelectedItemPosition() > 0 ? profiles.get(sControlsProfile.getSelectedItemPosition()-1).id : 0;
                 shortcut.putExtra("controlsProfile", controlsProfile > 0 ? String.valueOf(controlsProfile) : null);
                 shortcut.putExtra("simTouchScreen", cbSimulateTouchScreen.isChecked() ? "1" : "0");
-                shortcut.putExtra("inputType", finalInputType == inputType ? null : String.valueOf(finalInputType));
+                shortcut.putExtra("inputType", String.valueOf(finalInputType));
                 shortcut.saveData();
             }
         });
