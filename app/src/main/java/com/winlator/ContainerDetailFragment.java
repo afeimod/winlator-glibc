@@ -1,5 +1,6 @@
 package com.winlator;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +10,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -16,6 +19,7 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -114,6 +118,7 @@ public class ContainerDetailFragment extends Fragment {
         return container != null;
     }
 
+    @SuppressLint("SetTextI18n")
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup root, @Nullable Bundle savedInstanceState) {
@@ -186,6 +191,23 @@ public class ContainerDetailFragment extends Fragment {
         SDInputType.setSelection(((inputType & WinHandler.FLAG_DINPUT_MAPPER_STANDARD) == WinHandler.FLAG_DINPUT_MAPPER_STANDARD) ? 0 : 1);
         llDInputType.setVisibility(cbEnableDInput.isChecked()?View.VISIBLE:View.GONE);
 
+        final EditText etLC_ALL = view.findViewById(R.id.ETlcall);
+        Locale systemLocal = Locale.getDefault();
+        etLC_ALL.setText(isEditMode() ? container.getLC_ALL() : systemLocal.getLanguage() + '_' + systemLocal.getCountry() + ".UTF-8");
+
+        final View btShowLCALL = view.findViewById(R.id.BTShowLCALL);
+        btShowLCALL.setOnClickListener(v -> {
+            PopupMenu popupMenu = new PopupMenu(context, v);
+            String[] lcs = getResources().getStringArray(R.array.some_lc_all);
+            for (int i = 0; i < lcs.length; i++)
+                popupMenu.getMenu().add(Menu.NONE, i, Menu.NONE, lcs[i]);
+            popupMenu.setOnMenuItemClickListener(item -> {
+                etLC_ALL.setText(item.toString() + ".UTF-8");
+                return true;
+            });
+            popupMenu.show();
+        });
+
         final CheckBox cbWoW64Mode = view.findViewById(R.id.CBWoW64Mode);
         cbWoW64Mode.setChecked(!isEditMode() || container.isWoW64Mode());
 
@@ -227,6 +249,7 @@ public class ContainerDetailFragment extends Fragment {
                 String dxwrapperConfig = vDXWrapperConfig.getTag().toString();
                 String audioDriver = StringUtils.parseIdentifier(sAudioDriver.getSelectedItem());
                 String midiSoundFont = sMIDISoundFont.getSelectedItemPosition() == 0 ? "" : sMIDISoundFont.getSelectedItem().toString();
+                String lc_all = etLC_ALL.getText().toString();
                 String wincomponents = getWinComponents(view);
                 String drives = getDrives(view);
                 boolean showFPS = cbShowFPS.isChecked();
@@ -265,6 +288,7 @@ public class ContainerDetailFragment extends Fragment {
                     container.setDesktopTheme(desktopTheme);
                     container.setRcfileId(rcfileId);
                     container.setMidiSoundFont(midiSoundFont);
+                    container.setLC_ALL(lc_all);
                     container.saveData();
                     saveWineRegistryKeys(view);
                     getActivity().onBackPressed();
@@ -291,6 +315,7 @@ public class ContainerDetailFragment extends Fragment {
                     data.put("desktopTheme", desktopTheme);
                     data.put("rcfileId", rcfileId);
                     data.put("midiSoundFont", midiSoundFont);
+                    data.put("lc_all", lc_all);
                     data.put("wineVersion", sWineVersion.getSelectedItem().toString());
 
                     preloaderDialog.show(R.string.creating_container);

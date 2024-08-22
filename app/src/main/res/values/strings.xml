@@ -326,4 +326,5 @@
     <string name="startup_normal">Normal (Load all services)</string>
     <string name="startup_essential">Essential (Load only essential services)</string>
     <string name="startup_aggressive">Aggressive (Stop services on startup)</string>
+    <string name="lc_all" translatable="false">LC_ALL</string>
 </resources>

@@ -54,6 +54,7 @@ public class Container {
     private int rcfileId = 0;
     private String midiSoundFont = "";
     private int inputType = WinHandler.DEFAULT_INPUT_TYPE;
+    private String lc_all = "";
 
     public Container(int id) {
         this.id = id;
@@ -130,6 +131,14 @@ public class Container {
 
     public void setDrives(String drives) {
         this.drives = drives;
+    }
+
+    public String getLC_ALL() {
+        return lc_all;
+    }
+
+    public void setLC_ALL(String lc_all) {
+        this.lc_all = lc_all;
     }
 
     public boolean isShowFPS() {
@@ -337,6 +346,7 @@ public class Container {
             data.put("extraData", extraData);
             data.put("rcfileId", rcfileId);
             data.put("midiSoundFont", midiSoundFont);
+            data.put("lc_all", lc_all);
 
             if (!WineInfo.isMainWineVersion(wineVersion)) data.put("wineVersion", wineVersion);
             FileUtils.writeString(getConfigFile(), data.toString());
@@ -420,6 +430,9 @@ public class Container {
                     break;
                 case "midiSoundFont" :
                     setMidiSoundFont(data.getString(key));
+                    break;
+                case "lc_all" :
+                    setLC_ALL(data.getString(key));
                     break;
             }
         }
