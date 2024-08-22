@@ -156,7 +156,17 @@ public class TouchpadView extends View {
                         }
                         postDelayed(clickDelay, CLICK_DELAYED_TIME);
                     } else if (pointerId == 1) {
-                        continueClick = System.currentTimeMillis() - fingers[0].touchTime > CLICK_DELAYED_TIME;
+                        // When put a finger on InputControl, such as a button.
+                        // The pointerId that TouchPadView got won't increase from 1, so map 1 as 0 here.
+                        if (numFingers < 2) {
+                            continueClick = true;
+                            if (Math.hypot(fingers[1].x - lastTouchedPosX, fingers[1].y - lastTouchedPosY) * resolutionScale > EFFECTIVE_TOUCH_DISTANCE) {
+                                lastTouchedPosX = fingers[1].x;
+                                lastTouchedPosY = fingers[1].y;
+                            }
+                            postDelayed(clickDelay, CLICK_DELAYED_TIME);
+                        } else
+                            continueClick = System.currentTimeMillis() - fingers[0].touchTime > CLICK_DELAYED_TIME;
                     }
                 }
                 break;
