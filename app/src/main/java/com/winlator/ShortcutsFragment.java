@@ -103,6 +103,13 @@ public class ShortcutsFragment extends Fragment {
         }
 
         @Override
+        public void onViewRecycled(@NonNull ViewHolder holder) {
+            holder.menuButton.setOnClickListener(null);
+            holder.innerArea.setOnClickListener(null);
+            super.onViewRecycled(holder);
+        }
+
+        @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             final Shortcut item = data.get(position);
             if (item.icon != null) holder.imageView.setImageBitmap(item.icon);

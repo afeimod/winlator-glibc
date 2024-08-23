@@ -119,6 +119,12 @@ public class ContainersFragment extends Fragment {
         }
 
         @Override
+        public void onViewRecycled(@NonNull ViewHolder holder) {
+            holder.menuButton.setOnClickListener(null);
+            super.onViewRecycled(holder);
+        }
+
+        @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             final Container item = data.get(position);
             holder.imageView.setImageResource(R.drawable.icon_container);
