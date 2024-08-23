@@ -127,6 +127,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private boolean navigationFocused = false;
     private MidiHandler midiHandler;
     private String midiSoundFont = "";
+    private String lc_all = "";
     PreloaderDialog preloaderDialog = null;
 
     @Override
@@ -214,6 +215,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             String dxwrapperConfig = container.getDXWrapperConfig();
             screenSize = container.getScreenSize();
             winHandler.setInputType((byte) container.getInputType());
+            lc_all = container.getLC_ALL();
 
             if (shortcut != null) {
                 graphicsDriver = shortcut.getExtra("graphicsDriver", container.getGraphicsDriver());
@@ -222,6 +224,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 dxwrapper = shortcut.getExtra("dxwrapper", container.getDXWrapper());
                 dxwrapperConfig = shortcut.getExtra("dxwrapperConfig", container.getDXWrapperConfig());
                 screenSize = shortcut.getExtra("screenSize", container.getScreenSize());
+                lc_all = shortcut.getExtra("lc_all", container.getLC_ALL());
 
                 String inputType = shortcut.getExtra("inputType");
                 if (!inputType.isEmpty()) winHandler.setInputType(Byte.parseByte(inputType));
@@ -466,6 +469,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     }
 
     private void setupXEnvironment() {
+        envVars.put("LC_ALL", lc_all);
         envVars.put("MESA_DEBUG", "silent");
         envVars.put("MESA_NO_ERROR", "1");
         envVars.put("WINEPREFIX", imageFs.wineprefix);
