@@ -127,6 +127,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private boolean navigationFocused = false;
     private MidiHandler midiHandler;
     private String midiSoundFont = "";
+    PreloaderDialog preloaderDialog = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -136,7 +137,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         setContentView(R.layout.xserver_display_activity);
 
 
-        final PreloaderDialog preloaderDialog = new PreloaderDialog(this);
+        preloaderDialog = new PreloaderDialog(this);
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         contentsManager = new ContentsManager(this);
@@ -345,6 +346,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         if (midiHandler != null)
             midiHandler.stop();
         if (environment != null) environment.stopEnvironmentComponents();
+        if (preloaderDialog != null && preloaderDialog.isShowing())
+            preloaderDialog.close();
         super.onDestroy();
     }
 
@@ -777,7 +780,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 //        guestProgramLauncherComponent.setGuestExecutable(wineInfo.getExecutable(this, false)+" explorer /desktop=shell,"+Container.DEFAULT_SCREEN_SIZE+" winecfg");
         guestProgramLauncherComponent.setGuestExecutable("wine explorer /desktop=shell,"+Container.DEFAULT_SCREEN_SIZE+" winecfg");
 
-        final PreloaderDialog preloaderDialog = new PreloaderDialog(this);
+        preloaderDialog = new PreloaderDialog(this);
         guestProgramLauncherComponent.setTerminationCallback((status) -> Executors.newSingleThreadExecutor().execute(() -> {
             if (status > 0) {
                 AppUtils.showToast(this, R.string.unable_to_install_wine);
