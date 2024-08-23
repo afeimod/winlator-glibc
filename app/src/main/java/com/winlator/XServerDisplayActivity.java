@@ -1063,7 +1063,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         WineUtils.applySystemTweaks(this, wineInfo);
         container.putExtra("graphicsDriver", null);
         container.putExtra("desktopTheme", null);
-        SettingsFragment.resetBox86_64Version(this);
+        //SettingsFragment.resetBox86_64Version(this);
     }
 
     private void assignTaskAffinity(Window window) {
