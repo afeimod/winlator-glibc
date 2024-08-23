@@ -275,4 +275,10 @@
     <string name="startup_normal">正常（加载全部服务）</string>
     <string name="startup_essential">基本（只加载核心服务）</string>
     <string name="startup_aggressive">精简（在启动时停止服务）</string>
+    <string name="help_trigger_mode"><![CDATA[
+        这个选项取决于你正在使用的<i><b>物理控制器</b>。</i><br/><br/>
+        <i><b>轴</b></i>: 如果你的控制器的扳机键是线性的（具有一定行程），请勾选此选项。<br/><br/>
+        <i><b>按钮</b></i>: 如果你的控制器的扳机键是按钮（类似一个开关），请勾选此选项。<br/><br/>
+        <i><b>注意</b></i>: 如果为线性扳机勾选了<i><b>按钮</b></i>，则映射时会丢弃线性数据。<br/>
+    ]]></string>
 </resources>

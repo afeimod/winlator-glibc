@@ -327,4 +327,10 @@
     <string name="startup_essential">Essential (Load only essential services)</string>
     <string name="startup_aggressive">Aggressive (Stop services on startup)</string>
     <string name="lc_all" translatable="false">LC_ALL</string>
+    <string name="help_trigger_mode"><![CDATA[
+        This option depends on the <i><b>Physical Controller</b></i> you are using.<br/><br/>
+        <i><b>Is Axis</b></i>: Check this if the trigger on your controller is linear (with a range of motion).<br/><br/>
+        <i><b>Is Button</b></i>: Check this If the trigger on your controller is a button (similar to a switch).<br/><br/>
+        <i><b>Note</b></i>: For linear triggers, using <i><b>Is Button</b></i> will result in the loss of linear data when mapping.<br/>
+    ]]></string>
 </resources>

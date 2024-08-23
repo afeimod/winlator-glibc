@@ -200,12 +200,14 @@ public class SettingsFragment extends Fragment {
         sbCursorSpeed.setProgress((int)(preferences.getFloat("cursor_speed", 1.0f) * 100));
 
         final RadioGroup rgTriggerType = view.findViewById(R.id.RGTriggerType);
+        final View btHelpTriggerMode = view.findViewById(R.id.BTHelpTriggerMode);
         List<Integer> triggerRbIds = List.of(R.id.RBTriggerIsButton, R.id.RBTriggerIsAxis, R.id.RBTriggerIsMixed);
         int triggerType = preferences.getInt("trigger_type", ExternalController.TRIGGER_IS_AXIS);
 
         if (triggerType >= 0 && triggerType < triggerRbIds.size()) {
             ((RadioButton) (rgTriggerType.findViewById(triggerRbIds.get(triggerType)))).setChecked(true);
         }
+        btHelpTriggerMode.setOnClickListener(v -> AppUtils.showHelpBox(context, v, R.string.help_trigger_mode));
 
         final CheckBox cbUseGlibc = view.findViewById(R.id.CBUseGlibc);
         cbUseGlibc.setChecked(preferences.getBoolean("use_glibc", true));
