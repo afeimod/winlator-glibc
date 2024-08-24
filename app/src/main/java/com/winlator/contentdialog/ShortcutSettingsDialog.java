@@ -183,27 +183,28 @@ public class ShortcutSettingsDialog extends ContentDialog {
 
                 String execArgs = etExecArgs.getText().toString();
                 shortcut.putExtra("execArgs", !execArgs.isEmpty() ? execArgs : null);
-                shortcut.putExtra("screenSize", !screenSize.equals(shortcut.container.getScreenSize()) ? screenSize : null);
-                shortcut.putExtra("graphicsDriver", !graphicsDriver.equals(shortcut.container.getGraphicsDriver()) ? graphicsDriver : null);
-                shortcut.putExtra("dxwrapper", !dxwrapper.equals(shortcut.container.getDXWrapper()) ? dxwrapper : null);
-                shortcut.putExtra("dxwrapperConfig", !dxwrapperConfig.equals(shortcut.container.getDXWrapperConfig()) ? dxwrapperConfig : null);
-                shortcut.putExtra("audioDriver", !audioDriver.equals(shortcut.container.getAudioDriver())? audioDriver : null);
-                shortcut.putExtra("midiSoundFont", !midiSoundFont.equals(shortcut.container.getMIDISoundFont())? midiSoundFont : null);
+
+                updateExtra("screenSize", shortcut.container.getScreenSize(), screenSize);
+                updateExtra("graphicsDriver", shortcut.container.getGraphicsDriver(), graphicsDriver);
+                updateExtra("dxwrapper", shortcut.container.getDXWrapper(), dxwrapper);
+                updateExtra("dxwrapperConfig", shortcut.container.getDXWrapperConfig(), dxwrapperConfig);
+                updateExtra("audioDriver", shortcut.container.getAudioDriver(), audioDriver);
+                updateExtra("midiSoundFont", shortcut.container.getMIDISoundFont(), midiSoundFont);
+                updateExtra("lc_all", shortcut.container.getLC_ALL(), lc_all);
                 shortcut.putExtra("forceFullscreen", cbForceFullscreen.isChecked() ? "1" : null);
-                shortcut.putExtra("lc_all", lc_all.equals(shortcut.container.getLC_ALL()) ? null : lc_all);
 
                 String wincomponents = ContainerDetailFragment.getWinComponents(getContentView());
-                shortcut.putExtra("wincomponents", !wincomponents.equals(shortcut.container.getWinComponents()) ? wincomponents : null);
+                updateExtra("wincomponents", shortcut.container.getWinComponents(), wincomponents);
 
                 String envVars = envVarsView.getEnvVars();
                 shortcut.putExtra("envVars", !envVars.isEmpty() ? envVars : null);
 
                 String box86Preset = Box86_64PresetManager.getSpinnerSelectedId(sBox86Preset);
                 String box64Preset = Box86_64PresetManager.getSpinnerSelectedId(sBox64Preset);
-                shortcut.putExtra("box86Preset", !box86Preset.equals(shortcut.container.getBox86Preset()) ? box86Preset : null);
-                shortcut.putExtra("box64Preset", !box64Preset.equals(shortcut.container.getBox64Preset()) ? box64Preset : null);
+                updateExtra("box86Preset", shortcut.container.getBox86Preset(), box86Preset);
+                updateExtra("box64Preset", shortcut.container.getBox64Preset(), box64Preset);
 
-                shortcut.putExtra("rcfileId", rcfileIds[0] != shortcut.container.getRCFileId() ? Integer.toString(rcfileIds[0]) : null);
+                updateExtra("rcfileId", String.valueOf(shortcut.container.getRCFileId()), String.valueOf(rcfileIds[0]));
 
                 ArrayList<ControlsProfile> profiles = inputControlsManager.getProfiles(true);
                 int controlsProfile = sControlsProfile.getSelectedItemPosition() > 0 ? profiles.get(sControlsProfile.getSelectedItemPosition()-1).id : 0;
@@ -213,6 +214,13 @@ public class ShortcutSettingsDialog extends ContentDialog {
                 shortcut.saveData();
             }
         });
+    }
+
+    private void updateExtra(String extraName, String containerValue, String newValue) {
+        String extraValue = shortcut.getExtra(extraName);
+        if (extraValue.isEmpty() && containerValue.equals(newValue))
+            return;
+        shortcut.putExtra(extraName, newValue);
     }
 
     private void renameShortcut(String newName) {
