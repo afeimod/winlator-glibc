@@ -145,6 +145,12 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         AppUtils.hideSystemUI(this);
@@ -315,16 +321,24 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             } catch (Exception e) {}
         }
 
-        setupUI();
+        Runnable runnable = () -> {
+            setupUI();
 
-        Executors.newSingleThreadExecutor().execute(() -> {
-            if (!isGenerateWineprefix()) {
-                setupWineSystemFiles();
-                extractGraphicsDriverFiles();
-                changeWineAudioDriver();
-            }
-            setupXEnvironment();
-        });
+            Executors.newSingleThreadExecutor().execute(() -> {
+                if (!isGenerateWineprefix()) {
+                    setupWineSystemFiles();
+                    extractGraphicsDriverFiles();
+                    changeWineAudioDriver();
+                }
+                setupXEnvironment();
+            });
+        };
+
+        if (xServer.screenInfo.height > xServer.screenInfo.width) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            configChangedCallback = runnable;
+        } else
+            runnable.run();
     }
 
     @Override
@@ -402,13 +416,13 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
                 ControlsProfile profile = inputControlsView.getProfile();
                 int id = profile == null ? -1 : profile.id;
-                configChangedCallback = () -> runOnUiThread(() -> {
+                configChangedCallback = () -> {
                     if (profile != null) {
                         inputControlsManager = new InputControlsManager(this);
                         inputControlsManager.loadProfiles(true);
                         showInputControls(inputControlsManager.getProfile(id));
                     }
-                });
+                };
                 drawerLayout.closeDrawers();
                 break;
             case R.id.main_menu_task_manager:
