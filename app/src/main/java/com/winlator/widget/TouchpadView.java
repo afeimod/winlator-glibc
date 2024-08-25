@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.StateListDrawable;
+import android.os.Handler;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.PointerIcon;
@@ -48,6 +49,7 @@ public class TouchpadView extends View {
     private static final Byte CLICK_DELAYED_TIME = 50;
     private static final Byte EFFECTIVE_TOUCH_DISTANCE = 20;
     private float resolutionScale;
+    private static final int UPDATE_FORM_DELAYED_TIME = 50;
 
     @SuppressLint("ResourceType")
     public TouchpadView(Context context, XServer xServer) {
@@ -77,8 +79,8 @@ public class TouchpadView extends View {
         if (!xServer.getRenderer().isFullscreen()) {
             XForm.makeTranslation(xform, -viewTransformation.viewOffsetX, -viewTransformation.viewOffsetY);
             XForm.scale(xform, invAspect, invAspect);
-        }
-        else XForm.makeScale(xform, invAspect, invAspect);
+        } else
+            XForm.makeScale(xform, (float) innerWidth / outerWidth, (float) innerHeight / outerHeight);
     }
 
     private class Finger {
@@ -427,5 +429,10 @@ public class TouchpadView extends View {
 
     public boolean isSimTouchScreen() {
         return simTouchScreen;
+    }
+
+    public void toggleFullscreen() {
+        new Handler().postDelayed(() -> updateXform(getWidth(), getHeight(), xServer.screenInfo.width, xServer.screenInfo.height),
+                UPDATE_FORM_DELAYED_TIME);
     }
 }
