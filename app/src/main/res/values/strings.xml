@@ -333,4 +333,5 @@
         <i><b>Is Button</b></i>: Check this If the trigger on your controller is a button (similar to a switch).<br/><br/>
         <i><b>Note</b></i>: For linear triggers, using <i><b>Is Button</b></i> will result in the loss of linear data when mapping.<br/>
     ]]></string>
+    <string name="toggle_orientation">Toggle Orientation</string>
 </resources>

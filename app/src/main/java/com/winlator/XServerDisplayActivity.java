@@ -1,8 +1,11 @@
 package com.winlator;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -10,6 +13,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.PointerIcon;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
@@ -129,6 +133,16 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private String midiSoundFont = "";
     private String lc_all = "";
     PreloaderDialog preloaderDialog = null;
+    private Runnable configChangedCallback = null;
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (configChangedCallback != null) {
+            configChangedCallback.run();
+            configChangedCallback = null;
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -136,7 +150,6 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         AppUtils.hideSystemUI(this);
         AppUtils.keepScreenOn(this);
         setContentView(R.layout.xserver_display_activity);
-
 
         preloaderDialog = new PreloaderDialog(this);
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -364,6 +377,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         }
     }
 
+    @SuppressLint("SourceLockedOrientationActivity")
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         final GLRenderer renderer = xServerView.getRenderer();
@@ -380,6 +394,22 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 renderer.toggleFullscreen();
                 drawerLayout.closeDrawers();
                 touchpadView.toggleFullscreen();
+                break;
+            case R.id.main_menu_toggle_orientation:
+                if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                else
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                ControlsProfile profile = inputControlsView.getProfile();
+                int id = profile == null ? -1 : profile.id;
+                configChangedCallback = () -> runOnUiThread(() -> {
+                    if (profile != null) {
+                        inputControlsManager = new InputControlsManager(this);
+                        inputControlsManager.loadProfiles(true);
+                        showInputControls(inputControlsManager.getProfile(id));
+                    }
+                });
+                drawerLayout.closeDrawers();
                 break;
             case R.id.main_menu_task_manager:
                 (new TaskManagerDialog(this)).show();
