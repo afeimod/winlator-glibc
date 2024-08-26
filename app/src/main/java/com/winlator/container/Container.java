@@ -60,7 +60,7 @@ public class Container {
     private String midiSoundFont = "";
     private int inputType = WinHandler.DEFAULT_INPUT_TYPE;
     private String lc_all = "";
-    private int primaryController;
+    private int primaryController = 1;
     private String controllerMapping = new String(new char[10]);
 
     public Container(int id) {
