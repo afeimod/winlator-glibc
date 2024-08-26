@@ -334,6 +334,9 @@
         <i><b>Note</b></i>: For linear triggers, using <i><b>Is Button</b></i> will result in the loss of linear data when mapping.<br/>
     ]]></string>
     <string name="toggle_orientation">Toggle Orientation</string>
+    <string name="help_file_provider"><![CDATA[
+        <i><b>File Provider</b></i> allows access to Winlator\'s internal data through android file manager.<br/><br/>
+    ]]></string>
 
     <!-- OpenXR specific text -->
     <string name="xr" translatable="false">XR</string>

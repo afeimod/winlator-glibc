@@ -214,8 +214,11 @@ public class SettingsFragment extends Fragment {
         cbUseGlibc.setEnabled(false);
 
         final CheckBox cbEnableFileProvider = view.findViewById(R.id.CBEnableFileProvider);
+        final View btHelpFileProvider = view.findViewById(R.id.BTHelpFileProvider);
+
         cbEnableFileProvider.setChecked(preferences.getBoolean("enable_file_provider", false));
         cbEnableFileProvider.setOnClickListener(v -> AppUtils.showToast(context, R.string.take_effect_next_startup));
+        btHelpFileProvider.setOnClickListener(v -> AppUtils.showHelpBox(context, v, R.string.help_file_provider));
 
         loadInstalledWineList(view);
 

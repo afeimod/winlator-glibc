@@ -301,6 +301,7 @@
 
                         <ImageView
                             android:id="@+id/BTHelpTriggerMode"
+                            android:layout_gravity="center"
                             style="@style/HelpButton" />
                     </LinearLayout>
 
@@ -352,11 +353,23 @@
 
                     <View style="@style/FieldSeparator" />
 
-                    <CheckBox
-                        android:id="@+id/CBEnableFileProvider"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/enable_file_provider" />
+                        android:orientation="horizontal">
+
+                        <CheckBox
+                            android:id="@+id/CBEnableFileProvider"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:text="@string/enable_file_provider" />
+
+                        <ImageView
+                            android:id="@+id/BTHelpFileProvider"
+                            android:layout_gravity="center"
+                            style="@style/HelpButton" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <TextView

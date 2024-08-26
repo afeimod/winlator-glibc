@@ -281,6 +281,11 @@
         <i><b>按钮</b></i>: 如果你的控制器的扳机键是按钮（类似一个开关），请勾选此选项。<br/><br/>
         <i><b>注意</b></i>: 如果为线性扳机勾选了<i><b>按钮</b></i>，则映射时会丢弃线性数据。<br/>
     ]]></string>
+    <string name="help_file_provider"><![CDATA[
+        <i><b>文件提供器</b></i>允许通过安卓文件管理器访问Winlator的内部数据。<br/><br/>
+    ]]></string>
+
+    <!-- OpenXR specific text -->
     <string name="toggle_orientation">切换方向</string>
     <string name="primary_controller">主控制器</string>
     <string name="left_controller">左控制器</string>
