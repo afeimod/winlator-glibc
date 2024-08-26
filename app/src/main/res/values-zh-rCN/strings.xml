@@ -282,4 +282,17 @@
         <i><b>注意</b></i>: 如果为线性扳机勾选了<i><b>按钮</b></i>，则映射时会丢弃线性数据。<br/>
     ]]></string>
     <string name="toggle_orientation">切换方向</string>
+    <string name="primary_controller">主控制器</string>
+    <string name="left_controller">左控制器</string>
+    <string name="right_controller">右控制器</string>
+    <string name="button_a">按钮 A</string>
+    <string name="button_b">按钮 B</string>
+    <string name="button_x">按钮 X</string>
+    <string name="button_y">按钮 Y</string>
+    <string name="button_grip">握把按钮</string>
+    <string name="button_trigger">扳机按钮</string>
+    <string name="thumbstick_left">摇杆 左</string>
+    <string name="thumbstick_right">摇杆 右</string>
+    <string name="thumbstick_up">摇杆 上</string>
+    <string name="thumbstick_down">摇杆 下</string>
 </resources>
