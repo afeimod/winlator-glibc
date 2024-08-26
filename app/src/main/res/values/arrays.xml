@@ -130,4 +130,9 @@
         <item>zh_SG</item>
         <item>zh_TW</item>
     </string-array>
+
+    <string-array name="xr_controllers">
+        <item>@string/left_controller</item>
+        <item>@string/right_controller</item>
+    </string-array>
 </resources>
