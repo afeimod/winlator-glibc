@@ -55,6 +55,7 @@ public class Container {
     private String midiSoundFont = "";
     private int inputType = WinHandler.DEFAULT_INPUT_TYPE;
     private String lc_all = "";
+    private int primaryController;
 
     public Container(int id) {
         this.id = id;
@@ -139,6 +140,14 @@ public class Container {
 
     public void setLC_ALL(String lc_all) {
         this.lc_all = lc_all;
+    }
+
+    public int getPrimaryController() {
+        return primaryController;
+    }
+
+    public void setPrimaryController(int primaryController) {
+        this.primaryController = primaryController;
     }
 
     public boolean isShowFPS() {
@@ -347,6 +356,7 @@ public class Container {
             data.put("rcfileId", rcfileId);
             data.put("midiSoundFont", midiSoundFont);
             data.put("lc_all", lc_all);
+            data.put("primaryController", primaryController);
 
             if (!WineInfo.isMainWineVersion(wineVersion)) data.put("wineVersion", wineVersion);
             FileUtils.writeString(getConfigFile(), data.toString());
@@ -433,6 +443,9 @@ public class Container {
                     break;
                 case "lc_all" :
                     setLC_ALL(data.getString(key));
+                    break;
+                case "primaryController" :
+                    setPrimaryController(data.getInt(key));
                     break;
             }
         }

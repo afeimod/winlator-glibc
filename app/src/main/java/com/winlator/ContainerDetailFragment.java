@@ -232,12 +232,15 @@ public class ContainerDetailFragment extends Fragment {
         cpuListView.setCheckedCPUList(isEditMode() ? container.getCPUList(true) : Container.getFallbackCPUList());
         cpuListViewWoW64.setCheckedCPUList(isEditMode() ? container.getCPUListWoW64(true) : Container.getFallbackCPUListWoW64());
 
+        final Spinner sPrimaryController = view.findViewById(R.id.SPrimaryController);
+        sPrimaryController.setSelection(isEditMode() ? container.getPrimaryController() : 1);
+
         createWineConfigurationTab(view);
         final EnvVarsView envVarsView = createEnvVarsTab(view);
         createWinComponentsTab(view, isEditMode() ? container.getWinComponents() : Container.DEFAULT_WINCOMPONENTS);
         createDrivesTab(view);
 
-        AppUtils.setupTabLayout(view, R.id.TabLayout, R.id.LLTabWineConfiguration, R.id.LLTabWinComponents, R.id.LLTabEnvVars, R.id.LLTabDrives, R.id.LLTabAdvanced);
+        AppUtils.setupTabLayout(view, R.id.TabLayout, R.id.LLTabWineConfiguration, R.id.LLTabWinComponents, R.id.LLTabEnvVars, R.id.LLTabDrives, R.id.LLTabAdvanced, R.id.LLTabXR);
 
         view.findViewById(R.id.BTConfirm).setOnClickListener((v) -> {
             try {
@@ -261,6 +264,7 @@ public class ContainerDetailFragment extends Fragment {
                 String box64Preset = Box86_64PresetManager.getSpinnerSelectedId(sBox64Preset);
                 String desktopTheme = getDesktopTheme(view);
                 int rcfileId = rcfileIds[0];
+                int primaryController = sPrimaryController.getSelectedItemPosition();
 
                 int finalInputType = 0;
                 finalInputType |= cbEnableXInput.isChecked() ? WinHandler.FLAG_INPUT_TYPE_XINPUT : 0;
@@ -289,6 +293,7 @@ public class ContainerDetailFragment extends Fragment {
                     container.setRcfileId(rcfileId);
                     container.setMidiSoundFont(midiSoundFont);
                     container.setLC_ALL(lc_all);
+                    container.setPrimaryController(primaryController);
                     container.saveData();
                     saveWineRegistryKeys(view);
                     getActivity().onBackPressed();
@@ -316,6 +321,7 @@ public class ContainerDetailFragment extends Fragment {
                     data.put("rcfileId", rcfileId);
                     data.put("midiSoundFont", midiSoundFont);
                     data.put("lc_all", lc_all);
+                    data.put("primaryController", primaryController);
                     data.put("wineVersion", sWineVersion.getSelectedItem().toString());
 
                     preloaderDialog.show(R.string.creating_container);

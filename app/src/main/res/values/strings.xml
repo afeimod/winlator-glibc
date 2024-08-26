@@ -334,4 +334,10 @@
         <i><b>Note</b></i>: For linear triggers, using <i><b>Is Button</b></i> will result in the loss of linear data when mapping.<br/>
     ]]></string>
     <string name="toggle_orientation">Toggle Orientation</string>
+
+    <!-- OpenXR specific text -->
+    <string name="xr">XR</string>
+    <string name="primary_controller">Primary controller</string>
+    <string name="left_controller">Left controller</string>
+    <string name="right_controller">Right controller</string>
 </resources>
