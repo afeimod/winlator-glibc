@@ -1,7 +1,6 @@
 package com.winlator;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -13,14 +12,14 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.PointerIcon;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.Spinner;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -342,17 +341,6 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == MainActivity.EDIT_INPUT_CONTROLS_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            if (editInputControlsCallback != null) {
-                editInputControlsCallback.run();
-                editInputControlsCallback = null;
-            }
-        }
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         if (environment != null) {
@@ -641,6 +629,16 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         AppUtils.observeSoftKeyboardVisibility(drawerLayout, renderer::setScreenOffsetYRelativeToCursor);
     }
 
+    private ActivityResultLauncher<Intent> controlsEitorActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (editInputControlsCallback != null) {
+                    editInputControlsCallback.run();
+                    editInputControlsCallback = null;
+                }
+            }
+    );
+    
     private void showInputControlsDialog() {
         final ContentDialog dialog = new ContentDialog(this, R.layout.input_controls_dialog);
         dialog.setTitle(R.string.input_controls);
@@ -654,7 +652,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             profileItems.add("-- "+getString(R.string.disabled)+" --");
             for (int i = 0; i < profiles.size(); i++) {
                 ControlsProfile profile = profiles.get(i);
-                if (profile == inputControlsView.getProfile()) selectedPosition = i + 1;
+                if (inputControlsView.getProfile() != null && profile.id == inputControlsView.getProfile().id)
+                    selectedPosition = i + 1;
                 profileItems.add(profile.getName());
             }
 
@@ -672,30 +671,37 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         final CheckBox cbShowTouchscreenControls = dialog.findViewById(R.id.CBShowTouchscreenControls);
         cbShowTouchscreenControls.setChecked(inputControlsView.isShowTouchscreenControls());
 
+        final Runnable updateProfile = () -> {
+            int position = sProfile.getSelectedItemPosition();
+            if (position > 0) {
+                showInputControls(inputControlsManager.getProfiles().get(position - 1));
+            }
+            else hideInputControls();
+        };
+
         dialog.findViewById(R.id.BTSettings).setOnClickListener((v) -> {
             int position = sProfile.getSelectedItemPosition();
             Intent intent = new Intent(this, MainActivity.class);
             intent.putExtra("edit_input_controls", true);
             intent.putExtra("selected_profile_id", position > 0 ? inputControlsManager.getProfiles().get(position - 1).id : 0);
             editInputControlsCallback = () -> {
-                hideInputControls();
                 inputControlsManager.loadProfiles(true);
                 loadProfileSpinner.run();
+                updateProfile.run();
             };
-            startActivityForResult(intent, MainActivity.EDIT_INPUT_CONTROLS_REQUEST_CODE);
+            controlsEitorActivityResultLauncher.launch(intent);
         });
 
         dialog.setOnConfirmCallback(() -> {
             xServer.setRelativeMouseMovement(cbRelativeMouseMovement.isChecked());
             inputControlsView.setShowTouchscreenControls(cbShowTouchscreenControls.isChecked());
-            int position = sProfile.getSelectedItemPosition();
-            if (position > 0) {
-                showInputControls(inputControlsManager.getProfiles().get(position - 1));
-            }
-            else hideInputControls();
             touchpadView.setSimTouchScreen(cbSimTouchScreen.isChecked());
+            updateProfile.run();
         });
 
+        dialog.setOnCancelCallback(updateProfile::run);
+
+        dialog.setCanceledOnTouchOutside(false);
         dialog.show();
     }
 
