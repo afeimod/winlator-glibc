@@ -61,7 +61,7 @@ public class Container {
     private int inputType = WinHandler.DEFAULT_INPUT_TYPE;
     private String lc_all = "";
     private int primaryController = 1;
-    private String controllerMapping = new String(new char[10]);
+    private String controllerMapping = new String(new char[XrControllerMapping.values().length]);
 
     public Container(int id) {
         this.id = id;
@@ -158,12 +158,6 @@ public class Container {
 
     public byte getControllerMapping(XrControllerMapping input) {
         return (byte) controllerMapping.charAt(input.ordinal());
-    }
-
-    public void setControllerMapping(XrControllerMapping input, byte value) {
-        byte[] values = controllerMapping.getBytes();
-        values[input.ordinal()] = value;
-        controllerMapping = new String(values);
     }
 
     public void setControllerMapping(String controllerMapping) {
