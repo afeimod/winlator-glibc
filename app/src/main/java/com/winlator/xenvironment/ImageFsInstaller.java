@@ -98,8 +98,7 @@ public abstract class ImageFsInstaller {
                 for (File file : files) {
                     if (file.isDirectory()) {
                         String name = file.getName();
-                        if (name.equals("home") || name.equals("opt")) {
-                            if (name.equals("opt")) clearOptDir(file);
+                        if (name.equals("home")) {
                             continue;
                         }
                     }
