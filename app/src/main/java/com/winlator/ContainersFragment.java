@@ -33,6 +33,7 @@ import com.winlator.contentdialog.StorageInfoDialog;
 import com.winlator.core.PreloaderDialog;
 import com.winlator.xenvironment.ImageFs;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -184,6 +185,11 @@ public class ContainersFragment extends Fragment {
                         break;
                     case R.id.container_info:
                         (new StorageInfoDialog(getActivity(), container)).show();
+                        break;
+                    case R.id.container_reconfigure:
+                        ContentDialog.confirm(getContext(), R.string.do_you_want_to_reconfigure_wine, () -> {
+                            new File(container.getRootDir(), ".wine/.update-timestamp").delete();
+                        });
                         break;
                 }
                 return true;

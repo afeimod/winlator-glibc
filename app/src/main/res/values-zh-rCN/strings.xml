@@ -284,6 +284,8 @@
     <string name="help_file_provider"><![CDATA[
         <i><b>文件提供器</b></i>允许通过安卓文件管理器访问Winlator的内部数据。<br/><br/>
     ]]></string>
+    <string name="reconfigure">重新配置</string>
+    <string name="do_you_want_to_reconfigure_wine">您想要在下一次启动时重新配置容器吗? 这将删除时间戳以触发Wine配置。</string>
 
     <!-- OpenXR specific text -->
     <string name="toggle_orientation">切换方向</string>

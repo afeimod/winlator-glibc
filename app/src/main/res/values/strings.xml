@@ -337,6 +337,8 @@
     <string name="help_file_provider"><![CDATA[
         <i><b>File Provider</b></i> allows access to Winlator\'s internal data through android file manager.<br/><br/>
     ]]></string>
+    <string name="reconfigure">Reconfigure</string>
+    <string name="do_you_want_to_reconfigure_wine">Do you want to reconfigure this container on the next startup? This will remove the timestamp to trigger Wine Configuration.</string>
 
     <!-- OpenXR specific text -->
     <string name="xr" translatable="false">XR</string>
