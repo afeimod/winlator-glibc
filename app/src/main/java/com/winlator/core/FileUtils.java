@@ -27,8 +27,6 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -268,6 +266,9 @@ public abstract class FileUtils {
             String[] parts = uri.getLastPathSegment().split(":");
             if (parts[0].equalsIgnoreCase("primary"))
                 path = Environment.getExternalStorageDirectory() + "/" + parts[1];
+            else
+                // FIXME: may won't work on future Android System.
+                path = "/storage/" + parts[0] + '/' + parts[1];
         }
         return path;
     }
