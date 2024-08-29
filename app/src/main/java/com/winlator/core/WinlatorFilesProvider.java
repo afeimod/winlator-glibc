@@ -33,7 +33,7 @@ public class WinlatorFilesProvider extends DocumentsProvider {
     public void attachInfo(Context context, ProviderInfo info) {
         super.attachInfo(context, info);
         BASE_DIR = context.getDataDir();
-        enabled = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("enable_file_provider", false);
+        enabled = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("enable_file_provider", true);
     }
 
     @Override
