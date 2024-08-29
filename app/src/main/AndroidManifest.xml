@@ -69,7 +69,7 @@
         <activity android:name="com.winlator.ControlsEditorActivity"
             android:exported="false"
             android:theme="@style/AppThemeFullscreen"
-            android:screenOrientation="sensorLandscape" />
+            android:screenOrientation="sensor" />
 
         <activity android:name="com.winlator.ExternalControllerBindingsActivity"
             android:theme="@style/AppTheme"
