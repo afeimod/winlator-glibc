@@ -35,36 +35,38 @@ public class RCFile implements Comparable<RCFile> {
         groups.remove(group);
     }
 
+    public JSONObject toJson() throws JSONException {
+        JSONObject profileData = new JSONObject();
+        profileData.put("id", id);
+        profileData.put("name", name);
+        JSONArray groupsJSONArray = new JSONArray();
+
+        for (RCGroup group : groups) {
+            JSONObject groupData = new JSONObject();
+            groupData.put("name", group.getGroupName());
+            groupData.put("desc", group.getGroupDesc());
+            groupData.put("enabled", group.isEnabled());
+            JSONArray itemsJSONArray = new JSONArray();
+
+            for (RCItem item : group.getItems()) {
+                JSONObject itemData = new JSONObject();
+                itemData.put("processName", item.getProcessName());
+                itemData.put("desc", item.getItemDesc());
+                itemData.put("vars", new JSONObject(item.getVarMap()));
+                itemsJSONArray.put(itemData);
+            }
+            groupData.put("items", itemsJSONArray);
+            groupsJSONArray.put(groupData);
+        }
+
+        profileData.put("groups", groupsJSONArray);
+        return profileData;
+    }
+
     public void save() {
         File file = getRCFile(context, id);
-
         try {
-            JSONObject profileData = new JSONObject();
-            profileData.put("id", id);
-            profileData.put("name", name);
-            JSONArray groupsJSONArray = new JSONArray();
-
-            for (RCGroup group : groups) {
-                JSONObject groupData = new JSONObject();
-                groupData.put("name", group.getGroupName());
-                groupData.put("desc", group.getGroupDesc());
-                groupData.put("enabled", group.isEnabled());
-                JSONArray itemsJSONArray = new JSONArray();
-
-                for (RCItem item : group.getItems()) {
-                    JSONObject itemData = new JSONObject();
-                    itemData.put("processName", item.getProcessName());
-                    itemData.put("desc", item.getItemDesc());
-                    itemData.put("vars", new JSONObject(item.getVarMap()));
-                    itemsJSONArray.put(itemData);
-                }
-                groupData.put("items", itemsJSONArray);
-                groupsJSONArray.put(groupData);
-            }
-
-            profileData.put("groups", groupsJSONArray);
-
-            FileUtils.writeString(file, profileData.toString());
+            FileUtils.writeString(file, this.toJson().toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
