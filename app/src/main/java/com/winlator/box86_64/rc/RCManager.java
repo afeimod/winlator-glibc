@@ -35,29 +35,33 @@ public class RCManager {
     }
 
     public RCFile duplicateRCFile(RCFile source) {
-        String newName;
-        for (int i = 1; ; i++) {
-            newName = source.getName() + " (" + i + ")";
-            boolean found = false;
-            for (RCFile rcfile : rcfiles) {
-                if (rcfile.getName().equals(newName)) {
-                    found = true;
-                    break;
+        String newName = source.getName();
+        for (RCFile rcFile : getRCFiles()) {
+            if (rcFile.getName().equals(newName)) {
+                for (int i = 1; ; i++) {
+                    newName = source.getName() + " (" + i + ")";
+                    boolean found = false;
+                    for (RCFile rcfile : rcfiles) {
+                        if (rcfile.getName().equals(newName)) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) break;
                 }
+                break;
             }
-            if (!found) break;
         }
 
         int newId = ++maxRCFileId;
         File newFile = RCFile.getRCFile(context, newId);
 
         try {
-            JSONObject data = new JSONObject(FileUtils.readString(RCFile.getRCFile(context, source.id)));
+            JSONObject data = source.toJson();
             data.put("id", newId);
             data.put("name", newName);
             FileUtils.writeString(newFile, data.toString());
-        } catch (JSONException e) {
-        }
+        } catch (JSONException e) {}
 
         RCFile rcfile = loadRCFile(context, newFile);
         rcfiles.add(rcfile);
