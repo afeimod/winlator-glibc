@@ -70,6 +70,8 @@ public class ContentsFragment extends Fragment {
 
         new Thread(() -> {
             String json = Downloader.downloadString(ContentsManager.REMOTE_PROFILES_URL);
+            if (json == null)
+                return;
             getActivity().runOnUiThread(() -> {
                 manager.setRemoteProfiles(json);
                 loadContentList();
