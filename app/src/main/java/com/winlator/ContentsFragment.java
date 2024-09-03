@@ -69,14 +69,11 @@ public class ContentsFragment extends Fragment {
         super.onResume();
 
         //TODO:load from remote JSON
-        ArrayList<ContentProfile> profiles = new ArrayList<>();
-        ContentProfile remoteProfile = new ContentProfile();
-        remoteProfile.remoteUrl = "https://github.com/longjunyu2/winlator/releases/download/v7.1.3/wine-9.2-custom.wcp";
-        remoteProfile.type = ContentProfile.ContentType.CONTENT_TYPE_WINE;
-        remoteProfile.verName = "9.2-custom";
-        remoteProfile.verCode = 2;
-        profiles.add(remoteProfile);
-        manager.setRemoteProfiles(profiles);
+        String json = "[\n" +
+                "  { \"type\": \"Wine\", \"verName\": \"9.2-custom\", \"verCode\": 2, \"remoteUrl\": \"https://github.com/longjunyu2/winlator/releases/download/v7.1.3/wine-9.2-custom.wcp\" }\n" +
+                "]";
+
+        manager.setRemoteProfiles(json);
         loadContentList();
     }
 

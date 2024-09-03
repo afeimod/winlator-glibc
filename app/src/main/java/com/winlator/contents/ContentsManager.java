@@ -9,6 +9,7 @@ import com.winlator.core.FileUtils;
 import com.winlator.core.TarCompressorUtils;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -82,8 +83,26 @@ public class ContentsManager {
         void onSucceed(ContentProfile profile);
     }
 
-    public void setRemoteProfiles(ArrayList<ContentProfile> remoteProfiles) {
-        this.remoteProfiles = remoteProfiles;
+    public void setRemoteProfiles(String json) {
+        try {
+            remoteProfiles = new ArrayList<>();
+            JSONArray content = new JSONArray(json);
+            for (int i = 0; i < content.length(); i++) {
+                try {
+                    JSONObject object = content.getJSONObject(i);
+                    ContentProfile remoteProfile = new ContentProfile();
+                    remoteProfile.remoteUrl = object.getString("remoteUrl");
+                    remoteProfile.type = ContentProfile.ContentType.getTypeByName(object.getString("type"));
+                    remoteProfile.verName = object.getString("verName");
+                    remoteProfile.verCode = object.getInt("verCode");
+                    remoteProfiles.add(remoteProfile);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         syncContents();
     }
 
