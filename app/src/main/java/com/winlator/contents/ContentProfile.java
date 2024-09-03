@@ -58,4 +58,5 @@ public class ContentProfile {
     public String wineLibPath;
     public String wineBinPath;
     public String winePrefixPack;
+    public String remoteUrl;
 }

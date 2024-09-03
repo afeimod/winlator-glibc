@@ -114,7 +114,11 @@ public abstract class TarCompressorUtils {
     public static boolean extract(Type type, Context context, Uri source, File destination, OnExtractFileListener onExtractFileListener) {
         if (source == null) return false;
         try {
-            return extract(type, context.getContentResolver().openInputStream(source), destination, onExtractFileListener);
+            if (source.toString().startsWith("/")) {
+                return extract(type, new FileInputStream(source.toString()), destination, onExtractFileListener);
+            } else {
+                return extract(type, context.getContentResolver().openInputStream(source), destination, onExtractFileListener);
+            }
         }
         catch (FileNotFoundException e) {
             return false;
