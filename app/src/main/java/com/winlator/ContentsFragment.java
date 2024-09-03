@@ -3,6 +3,7 @@ package com.winlator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,6 +14,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -31,9 +33,12 @@ import com.winlator.contentdialog.ContentInfoDialog;
 import com.winlator.contentdialog.ContentUntrustedDialog;
 import com.winlator.contents.ContentProfile;
 import com.winlator.contents.ContentsManager;
+import com.winlator.contents.Downloader;
 import com.winlator.core.AppUtils;
+import com.winlator.core.FileUtils;
 import com.winlator.core.PreloaderDialog;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -51,6 +56,27 @@ public class ContentsFragment extends Fragment {
         setHasOptionsMenu(false);
         manager = new ContentsManager(getContext());
         manager.syncContents();
+    }
+
+    @Override
+    public void onDestroy() {
+        FileUtils.clear(getContext().getCacheDir());
+        super.onDestroy();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        new Thread(() -> {
+            String json = Downloader.downloadString(ContentsManager.REMOTE_PROFILES_URL);
+            if (json == null)
+                return;
+            getActivity().runOnUiThread(() -> {
+                manager.setRemoteProfiles(json);
+                loadContentList();
+            });
+        }).start();
     }
 
     @Override
@@ -196,13 +222,14 @@ public class ContentsFragment extends Fragment {
 
     private void loadContentList() {
         List<ContentProfile> profiles = manager.getProfiles(currentContentType);
+
         if (profiles.isEmpty()) {
             emptyText.setVisibility(View.VISIBLE);
             recyclerView.setVisibility(View.GONE);
         } else {
             emptyText.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
-            recyclerView.setAdapter(new ContentItemAdapter(manager.getProfiles(currentContentType)));
+            recyclerView.setAdapter(new ContentItemAdapter(profiles));
         }
     }
 
@@ -214,6 +241,8 @@ public class ContentsFragment extends Fragment {
             private final TextView tvVersionName;
             private final TextView tvVersionCode;
             private final ImageButton ibMenu;
+            private final ImageButton ibDownload;
+            private final ProgressBar progressBar;
 
             public ViewHolder(@NonNull View view) {
                 super(view);
@@ -222,6 +251,8 @@ public class ContentsFragment extends Fragment {
                 tvVersionName = view.findViewById(R.id.TVVersionName);
                 tvVersionCode = view.findViewById(R.id.TVVersionCode);
                 ibMenu = view.findViewById(R.id.BTMenu);
+                ibDownload = view.findViewById(R.id.BTDownload);
+                progressBar = view.findViewById(R.id.Progress);
             }
         }
 
@@ -244,16 +275,17 @@ public class ContentsFragment extends Fragment {
         @SuppressLint("StringFormatInvalid")
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            final ContentProfile protfile = data.get(position);
+            final ContentProfile profile = data.get(position);
 
-            int iconId = switch (protfile.type) {
+            int iconId = switch (profile.type) {
                 case CONTENT_TYPE_WINE -> R.drawable.icon_wine;
                 default -> R.drawable.icon_settings;
             };
             holder.ivIcon.setBackground(getContext().getDrawable(iconId));
 
-            holder.tvVersionName.setText(getContext().getString(R.string.version) + ": " + protfile.verName);
-            holder.tvVersionCode.setText(getContext().getString(R.string.version_code) + ": " + protfile.verCode);
+            holder.tvVersionName.setText(getContext().getString(R.string.version) + ": " + profile.verName);
+            holder.tvVersionCode.setText(getContext().getString(R.string.version_code) + ": " + profile.verCode);
+            holder.ibMenu.setVisibility(profile.remoteUrl == null ? View.VISIBLE : View.GONE);
             holder.ibMenu.setOnClickListener(v -> {
                 PopupMenu selectionMenu = new PopupMenu(getContext(), holder.ibMenu);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
@@ -262,25 +294,45 @@ public class ContentsFragment extends Fragment {
                 selectionMenu.setOnMenuItemClickListener(item -> {
                     int itemId = item.getItemId();
                     if (itemId == R.id.content_info) {
-                        new ContentInfoDialog(getContext(), protfile).show();
+                        new ContentInfoDialog(getContext(), profile).show();
                     } else if (itemId == R.id.remove_content) {
                         ContentDialog.confirm(getContext(), R.string.do_you_want_to_remove_this_content, () -> {
-                            if (protfile.type == ContentProfile.ContentType.CONTENT_TYPE_WINE) {
+                            if (profile.type == ContentProfile.ContentType.CONTENT_TYPE_WINE) {
                                 ContainerManager containerManager = new ContainerManager(getContext());
                                 for (Container container : containerManager.getContainers()) {
-                                    if (container.getWineVersion().equals(ContentsManager.getEntryName(protfile))) {
+                                    if (container.getWineVersion().equals(ContentsManager.getEntryName(profile))) {
                                         ContentDialog.alert(getContext(), String.format(getString(R.string.unable_to_remove_content_since_container_using), container.getName()), null);
                                         return;
                                     }
                                 }
                             }
-                            manager.removeContent(protfile);
+                            manager.removeContent(profile);
                             loadContentList();
                         });
                     }
                     return true;
                 });
                 selectionMenu.show();
+            });
+            holder.ibDownload.setVisibility((profile.remoteUrl != null) && (holder.progressBar.getVisibility() == View.GONE) ? View.VISIBLE : View.GONE);
+            holder.ibDownload.setOnClickListener(v -> {
+                holder.ibDownload.setVisibility(View.GONE);
+                holder.progressBar.setVisibility(View.VISIBLE);
+
+                Intent intent = new Intent();
+                intent.setData(Uri.parse(profile.remoteUrl));
+                new Thread(() -> {
+                    long timestamp = System.currentTimeMillis();
+                    File output = new File(getContext().getCacheDir(), "temp_" + timestamp);
+                    if (Downloader.downloadFile(profile.remoteUrl, output)) {
+                        intent.setData(Uri.parse(output.getAbsolutePath()));
+                    }
+                    getActivity().runOnUiThread(() -> {
+                        holder.progressBar.setVisibility(View.GONE);
+                        holder.ibDownload.setVisibility(View.VISIBLE);
+                        onActivityResult(MainActivity.OPEN_FILE_REQUEST_CODE, Activity.RESULT_OK, intent);
+                    });
+                }).start();
             });
         }
 

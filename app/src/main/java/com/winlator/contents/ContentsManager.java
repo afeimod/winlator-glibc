@@ -9,6 +9,7 @@ import com.winlator.core.FileUtils;
 import com.winlator.core.TarCompressorUtils;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -21,6 +22,7 @@ import java.util.Map;
 
 public class ContentsManager {
     public static final String PROFILE_NAME = "profile.json";
+    public static final String REMOTE_PROFILES_URL = "https://raw.githubusercontent.com/longjunyu2/winlator/main/content/metadata.json";
     public static final String[] TURNIP_TRUST_FILES = {"${libdir}/libvulkan_freedreno.so", "${libdir}/libvulkan.so.1",
             "${sharedir}/vulkan/icd.d/freedreno_icd.aarch64.json", "${libdir}/libGL.so.1", "${libdir}/libglapi.so.0"};
     public static final String[] VIRGL_TRUST_FILES = {"${libdir}/libGL.so.1", "${libdir}/libglapi.so.0"};
@@ -70,6 +72,8 @@ public class ContentsManager {
 
     private HashMap<ContentProfile.ContentType, List<ContentProfile>> profilesMap;
 
+    private ArrayList<ContentProfile> remoteProfiles;
+
     public ContentsManager(Context context) {
         this.context = context;
     }
@@ -80,6 +84,29 @@ public class ContentsManager {
         void onSucceed(ContentProfile profile);
     }
 
+    public void setRemoteProfiles(String json) {
+        try {
+            remoteProfiles = new ArrayList<>();
+            JSONArray content = new JSONArray(json);
+            for (int i = 0; i < content.length(); i++) {
+                try {
+                    JSONObject object = content.getJSONObject(i);
+                    ContentProfile remoteProfile = new ContentProfile();
+                    remoteProfile.remoteUrl = object.getString("remoteUrl");
+                    remoteProfile.type = ContentProfile.ContentType.getTypeByName(object.getString("type"));
+                    remoteProfile.verName = object.getString("verName");
+                    remoteProfile.verCode = object.getInt("verCode");
+                    remoteProfiles.add(remoteProfile);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        syncContents();
+    }
+
     public void syncContents() {
         profilesMap = new HashMap<>();
         for (ContentProfile.ContentType type : ContentProfile.ContentType.values()) {
@@ -88,15 +115,31 @@ public class ContentsManager {
 
             File typeFile = getContentTypeDir(context, type);
             File[] fileList = typeFile.listFiles();
-            if (fileList == null)
-                continue;
+            if (fileList != null) {
+                for (File file : fileList) {
+                    File proFile = new File(file, PROFILE_NAME);
+                    if (proFile.exists() && proFile.isFile()) {
+                        ContentProfile profile = readProfile(proFile);
+                        if (profile != null)
+                            profiles.add(profile);
+                    }
+                }
+            }
 
-            for (File file : fileList) {
-                File proFile = new File(file, PROFILE_NAME);
-                if (proFile.exists() && proFile.isFile()) {
-                    ContentProfile profile = readProfile(proFile);
-                    if (profile != null)
-                        profiles.add(profile);
+            if (remoteProfiles != null) {
+                for (ContentProfile remote : remoteProfiles) {
+                    if (remote.type == type) {
+                        boolean exists = false;
+                        for (ContentProfile profile : profiles) {
+                            if ((profile.verName.compareTo(remote.verName) == 0) && (profile.verCode == remote.verCode)) {
+                                exists = true;
+                                break;
+                            }
+                        }
+                        if (!exists) {
+                            profiles.add(remote);
+                        }
+                    }
                 }
             }
         }
@@ -306,6 +349,7 @@ public class ContentsManager {
         if (profilesMap.get(profile.type).contains(profile)) {
             FileUtils.delete(getInstallDir(context, profile));
             profilesMap.get(profile.type).remove(profile);
+            syncContents();
         }
     }
 
