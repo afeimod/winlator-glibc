@@ -17,12 +17,12 @@ public class EventBus {
     private final Object lock = new Object();
 
     @SafeVarargs
-    public final <T extends BaseEvent> boolean register(@NonNull ISubscriber subscriber, @NonNull Class<T>... eventTypes) {
+    public final boolean register(@NonNull ISubscriber subscriber, @NonNull Class<? extends BaseEvent>... eventTypes) {
         synchronized (lock) {
             var eventTypeSets = mMap.computeIfAbsent(subscriber, k -> new HashSet<>());
             boolean ret = true;
 
-            for (Class<T> eventType : eventTypes) {
+            for (Class<? extends BaseEvent> eventType : eventTypes) {
                 if (!eventTypeSets.add(eventType))
                     ret = false;
             }
@@ -32,12 +32,12 @@ public class EventBus {
 
     public boolean unregister(@NonNull ISubscriber subscriber) {
         synchronized (lock) {
-            return mMap.remove(subscriber) == null;
+            return mMap.remove(subscriber) != null;
         }
     }
 
     @SafeVarargs
-    public final <T extends BaseEvent> boolean unregister(@NonNull ISubscriber subscriber, @NonNull Class<T>... eventTypes) {
+    public final boolean unregister(@NonNull ISubscriber subscriber, @NonNull Class<? extends BaseEvent>... eventTypes) {
         var eventTypeSets = mMap.get(subscriber);
         boolean ret = true;
 
@@ -45,7 +45,7 @@ public class EventBus {
             return false;
 
         synchronized (lock) {
-            for (Class<T> eventType : eventTypes) {
+            for (Class<? extends BaseEvent> eventType : eventTypes) {
                 if (!eventTypeSets.remove(eventType))
                     ret = false;
             }
@@ -59,7 +59,10 @@ public class EventBus {
 
     public boolean post(@NonNull BaseEvent event) {
         try {
-            mQueue.put(event);
+            if (event.getPriority() == EventPriority.HIGH)
+                mQueue.putFirst(event);
+            else
+                mQueue.put(event);
         } catch (InterruptedException e) {
             return false;
         }
@@ -99,6 +102,9 @@ public class EventBus {
             }
             synchronized (lock) {
                 dispatchEvent(currentEvent);
+                // Explicitly setting currentEvent to null
+                // since LinkedBlockingDeque may blocking the thread for a long time
+                currentEvent = null;
             }
         }
     };
