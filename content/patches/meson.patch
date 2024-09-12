@@ -1,0 +1,414 @@
+diff --git a/meson.build b/meson.build
+index d3dbe6b..f8e84f3 100644
+--- a/meson.build
++++ b/meson.build
+@@ -59,6 +59,7 @@ with_glx_direct = get_option('glx-direct')
+ with_osmesa = get_option('osmesa')
+ with_vulkan_overlay_layer = get_option('vulkan-layers').contains('overlay')
+ with_vulkan_device_select_layer = get_option('vulkan-layers').contains('device-select')
++with_vulkan_screenshot_layer = get_option('vulkan-layers').contains('screenshot')
+ with_tools = get_option('tools')
+ if with_tools.contains('all')
+   with_tools = [
+@@ -263,14 +264,12 @@ if with_any_vk and host_machine.system() == 'windows' and meson.version().versio
+ endif
+ 
+ with_any_llvmpipe = with_gallium_llvmpipe or with_swrast_vk
++with_gallium_or_lvp = with_gallium or with_swrast_vk
+ 
+ freedreno_kmds = get_option('freedreno-kmds')
+ if freedreno_kmds.length() != 0 and freedreno_kmds != [ 'msm' ] and with_freedreno_vk
+   if freedreno_kmds.contains('msm')
+       warning('Turnip with the DRM KMD will require libdrm to always be present at runtime which may not always be the case on platforms such as Android.')
+-  endif
+-  if freedreno_kmds.contains('kgsl')
+-      pre_args += '-DHAVE_FREEDRENO_KGSL'
+   elif with_gallium_kmsro
+       warning('As a side-effect, Turnip is forced to link with libdrm when built alongside Gallium DRM drivers which platforms such as Android may not have available at runtime.')
+   elif _vulkan_drivers != [ 'freedreno' ]
+@@ -505,22 +504,28 @@ if not have_mtls_dialect
+   if meson.is_cross_build() and not meson.can_run_host_binaries()
+     warning('cannot auto-detect -mtls-dialect when cross-compiling, using compiler default')
+   else
+-    # -fpic to force dynamic tls, otherwise TLS relaxation defeats check
+-    gnu2_test = cc.run('int __thread x; int main() { return x; }',
+-                       args: ['-mtls-dialect=gnu2', '-fpic'],
+-                       name: '-mtls-dialect=gnu2')
+-    if gnu2_test.returncode() == 0 and (
+-          # check for lld 13 bug: https://gitlab.freedesktop.org/mesa/mesa/-/issues/5665
+-          host_machine.cpu_family() != 'x86_64' or
+-          # get_linker_id misses LDFLAGS=-fuse-ld=lld: https://github.com/mesonbuild/meson/issues/6377
+-          #cc.get_linker_id() != 'ld.lld' or
+-          cc.links('''int __thread x; int y; int main() { __asm__(
+-                "leaq x@TLSDESC(%rip), %rax\n"
+-                "movq y@GOTPCREL(%rip), %rdx\n"
+-                "call *x@TLSCALL(%rax)\n"); }''', name: 'split TLSDESC')
+-          )
+-      c_cpp_args += '-mtls-dialect=gnu2'
+-    endif
++    # The way to specify the TLSDESC dialect is architecture-specific.
++    # We probe both because there is not a fallback guaranteed to work for all
++    # future architectures.
++    foreach tlsdesc_arg : ['-mtls-dialect=gnu2', '-mtls-dialect=desc']
++      # -fpic to force dynamic tls, otherwise TLS relaxation defeats check
++      tlsdesc_test = cc.run('int __thread x; int main() { return x; }',
++                            args: [tlsdesc_arg, '-fpic'],
++                            name: tlsdesc_arg)
++      if tlsdesc_test.returncode() == 0 and (
++            # check for lld 13 bug: https://gitlab.freedesktop.org/mesa/mesa/-/issues/5665
++            host_machine.cpu_family() != 'x86_64' or
++            # get_linker_id misses LDFLAGS=-fuse-ld=lld: https://github.com/mesonbuild/meson/issues/6377
++            #cc.get_linker_id() != 'ld.lld' or
++            cc.links('''int __thread x; int y; int main() { __asm__(
++                  "leaq x@TLSDESC(%rip), %rax\n"
++                  "movq y@GOTPCREL(%rip), %rdx\n"
++                  "call *x@TLSCALL(%rax)\n"); }''', name: 'split TLSDESC')
++            )
++        c_cpp_args += tlsdesc_arg
++        break
++      endif
++    endforeach
+   endif
+ endif
+ 
+@@ -561,23 +566,15 @@ if with_vulkan_icd_dir == ''
+ endif
+ 
+ with_dri2 = (with_dri or with_any_vk) and (with_dri_platform == 'drm' or with_dri_platform == 'apple')
+-with_dri3 = get_option('dri3').disable_auto_if(not (system_has_kms_drm and with_dri2)).allowed()
+ 
+ with_x11_dri2 = with_dri2 and get_option('legacy-x11').contains('dri2')
+ 
+-if with_any_vk and (with_platform_x11 and not with_dri3)
+-  error('Vulkan drivers require dri3 for X11 support')
+-endif
+ if with_dri
+   if with_glx == 'disabled' and not with_egl and not with_gbm
+     error('building dri drivers require at least one windowing system')
+   endif
+ endif
+ 
+-if with_gallium_kmsro and (with_platform_x11 and not with_dri3)
+-  error('kmsro requires dri3 for X11 support')
+-endif
+-
+ dep_dxheaders = null_dep
+ if with_gallium_d3d12 or with_microsoft_clc or with_microsoft_vk
+   dep_dxheaders = dependency('directx-headers', required : false)
+@@ -629,7 +626,7 @@ prog_glslang = find_program('glslangValidator', native : true,
+ if prog_glslang.found()
+   # Check if glslang has depfile support. Support was added in 11.3.0, but
+   # Windows path support was broken until 11.9.0.
+-  # 
++  #
+   # It is intentional to check the build machine, since we need to ensure that
+   # glslang will output valid paths on the build platform
+   _glslang_check = build_machine.system() == 'windows' ? '>= 11.9.0' : '>= 11.3.0'
+@@ -645,85 +642,6 @@ if prog_glslang.found()
+   endif
+ endif
+ 
+-dep_xv = null_dep
+-_omx = get_option('gallium-omx')
+-if not system_has_kms_drm
+-  if ['auto', 'disabled'].contains(_omx)
+-    _omx = 'disabled'
+-  else
+-    error('OMX state tracker can only be built on unix-like OSes.')
+-  endif
+-elif not (with_gallium_r600 or with_gallium_radeonsi or with_gallium_nouveau)
+-  if ['auto', 'disabled'].contains(_omx)
+-    _omx = 'disabled'
+-  else
+-    error('OMX state tracker requires at least one of the following gallium drivers: r600, radeonsi, nouveau.')
+-  endif
+-endif
+-with_gallium_omx = _omx
+-dep_omx = null_dep
+-dep_omx_other = []
+-if ['auto', 'bellagio'].contains(_omx)
+-  dep_omx = dependency(
+-    'libomxil-bellagio', required : _omx == 'bellagio'
+-  )
+-  if dep_omx.found()
+-    with_gallium_omx = 'bellagio'
+-  endif
+-endif
+-if ['auto', 'tizonia'].contains(_omx)
+-  if with_dri and with_egl
+-    dep_omx = dependency(
+-      'libtizonia', version : '>= 0.10.0',
+-      required : _omx == 'tizonia',
+-    )
+-    dep_omx_other = [
+-      dependency('libtizplatform', required : _omx == 'tizonia'),
+-      dependency('tizilheaders', required : _omx == 'tizonia'),
+-    ]
+-    if dep_omx.found() and dep_omx_other[0].found() and dep_omx_other[1].found()
+-      with_gallium_omx = 'tizonia'
+-    endif
+-  elif _omx == 'tizonia'
+-    error('OMX-Tizonia state tracker requires dri and egl')
+-  endif
+-endif
+-if _omx == 'auto'
+-  with_gallium_omx = 'disabled'
+-else
+-  with_gallium_omx = _omx
+-endif
+-
+-pre_args += '-DENABLE_ST_OMX_BELLAGIO=@0@'.format((with_gallium_omx == 'bellagio').to_int())
+-pre_args += '-DENABLE_ST_OMX_TIZONIA=@0@'.format((with_gallium_omx == 'tizonia').to_int())
+-
+-
+-omx_drivers_path = get_option('omx-libs-path')
+-
+-if with_gallium_omx != 'disabled'
+-  # Figure out where to put the omx driver.
+-  # FIXME: this could all be vastly simplified by adding a 'defined_variable'
+-  # argument to meson's get_variable method.
+-  if omx_drivers_path == ''
+-    _omx_libdir = dep_omx.get_variable(pkgconfig : 'libdir')
+-    _omx_drivers_dir = dep_omx.get_variable(pkgconfig : 'pluginsdir')
+-    if _omx_libdir == get_option('libdir')
+-      omx_drivers_path = _omx_drivers_dir
+-    else
+-      _omx_base_dir = []
+-      # This will fail on windows. Does OMX run on windows?
+-      _omx_libdir = _omx_libdir.split('/')
+-      _omx_drivers_dir = _omx_drivers_dir.split('/')
+-      foreach o : _omx_drivers_dir
+-        if not _omx_libdir.contains(o)
+-          _omx_base_dir += o
+-        endif
+-      endforeach
+-      omx_drivers_path = join_paths(get_option('libdir'), _omx_base_dir)
+-    endif
+-  endif
+-endif
+-
+ _va_drivers = [
+   with_gallium_d3d12_video,
+   with_gallium_nouveau,
+@@ -781,9 +699,6 @@ if with_gallium_st_nine
+            ].contains(true)
+     error('The nine state tracker requires at least one non-swrast gallium driver.')
+   endif
+-  if not with_dri3
+-    error('Using nine with wine requires dri3')
+-  endif
+ endif
+ with_gallium_st_d3d10umd =  get_option('gallium-d3d10umd')
+ if with_gallium_st_d3d10umd
+@@ -1047,6 +962,7 @@ endforeach
+ _attributes = [
+   'const', 'flatten', 'malloc', 'pure', 'unused', 'warn_unused_result',
+   'weak', 'format', 'packed', 'returns_nonnull', 'alias', 'noreturn',
++  'optimize',
+ ]
+ foreach a : cc.get_supported_function_attributes(_attributes)
+   pre_args += '-DHAVE_FUNC_ATTRIBUTE_@0@'.format(a.to_upper())
+@@ -1743,7 +1659,7 @@ with_gallium_drisw_kms = false
+ if system_has_kms_drm
+   dep_libdrm = dependency(
+     'libdrm', version : '>=' + _drm_ver,
+-    required : with_dri2 or with_dri3
++    required : with_dri2 or with_dri
+   )
+ else
+   # We should prevent libdrm from being available when the target doesn't have it to avoid transitive
+@@ -1787,7 +1703,6 @@ if with_clc
+   llvm_optional_modules += ['all-targets', 'windowsdriver', 'frontendhlsl', 'frontenddriver']
+ endif
+ draw_with_llvm = get_option('draw-use-llvm')
+-llvm_with_orcjit = get_option('llvm-orcjit')
+ if draw_with_llvm
+   llvm_modules += 'native'
+   # lto is needded with LLVM>=15, but we don't know what LLVM verrsion we are using yet
+@@ -1795,6 +1710,12 @@ if draw_with_llvm
+ endif
+ amd_with_llvm = get_option('amd-use-llvm')
+ 
++# MCJIT is deprecated in LLVM and will not accept new architecture ports,
++# so any architecture not in the exhaustive list will have to rely on LLVM
++# ORCJIT for llvmpipe functionality.
++llvm_has_mcjit = host_machine.cpu_family() in ['aarch64', 'arm', 'ppc', 'ppc64', 's390x', 'x86', 'x86_64']
++llvm_with_orcjit = get_option('llvm-orcjit') or not llvm_has_mcjit
++
+ if with_amd_vk or with_gallium_radeonsi or with_clc or llvm_with_orcjit
+   _llvm_version = '>= 15.0.0'
+ elif with_gallium_clover
+@@ -1831,8 +1752,8 @@ if with_llvm
+   pre_args += '-DMESA_LLVM_VERSION_STRING="@0@"'.format(dep_llvm.version())
+   pre_args += '-DLLVM_IS_SHARED=@0@'.format(_shared_llvm.to_int())
+ 
+-  if with_swrast_vk and not draw_with_llvm
+-    error('Lavapipe requires LLVM draw support.')
++  if (with_swrast_vk or with_gallium_llvmpipe) and not draw_with_llvm
++    error('Lavapipe and llvmpipe require LLVM draw support.')
+   endif
+ 
+   if with_gallium_r600 and not amd_with_llvm
+@@ -1870,7 +1791,7 @@ elif with_amd_vk and with_aco_tests
+   error('ACO tests require LLVM, but LLVM is disabled.')
+ elif with_swrast_vk
+   error('lavapipe requires LLVM and is enabled, but LLVM is disabled.')
+-elif with_gallium_llvmpipe
++elif with_any_llvmpipe
+   error('llvmpipe requires LLVM and is enabled, but LLVM is disabled.')
+ elif with_gallium_clover
+   error('The OpenCL "Clover" state tracker requires LLVM, but LLVM is disabled.')
+@@ -1907,14 +1828,21 @@ if with_clover_spirv or with_clc
+     '>= @0@.@1@'.format(chosen_llvm_version_major, chosen_llvm_version_minor),
+     '< @0@.@1@'.format(chosen_llvm_version_major, chosen_llvm_version_minor + 1) ]
+ 
+-  dep_spirv_tools = dependency('SPIRV-Tools', required : true, version : '>= 2018.0')
+   # LLVMSPIRVLib is available at https://github.com/KhronosGroup/SPIRV-LLVM-Translator
+   dep_llvmspirvlib = dependency('LLVMSPIRVLib', required : true, version : _llvmspirvlib_version)
+ else
+-  dep_spirv_tools = null_dep
+   dep_llvmspirvlib = null_dep
+ endif
+ 
++dep_spirv_tools = dependency(
++  'SPIRV-Tools',
++  required : with_clover_spirv or with_clc,
++  version : '>= 2018.0'
++)
++if dep_spirv_tools.found()
++  pre_args += '-DHAVE_SPIRV_TOOLS'
++endif
++
+ dep_clang = null_dep
+ if with_clc
+   llvm_libdir = dep_llvm.get_variable(cmake : 'LLVM_LIBRARY_DIR', configtool: 'libdir')
+@@ -1945,6 +1873,12 @@ if with_clc
+   endif
+ endif
+ 
++dep_lua = dependency('lua54', 'lua5.4', 'lua-5.4',
++                     'lua53', 'lua5.3', 'lua-5.3',
++                     'lua', required: false,
++                     allow_fallback: with_tools.contains('freedreno'),
++                     version: '>=5.3')
++
+ # Be explicit about only using this lib on Windows, to avoid picking
+ # up random libs with the generic name 'libversion'
+ dep_version = null_dep
+@@ -1980,7 +1914,7 @@ endif
+ # so add a define to work silence these issues.
+ if get_option('b_sanitize') == 'thread'
+   pre_args += '-DTHREAD_SANITIZER=1'
+-  # meson versions prior to 1.4 will warn "Consider using the built-in option for sanitizers ..." 
++  # meson versions prior to 1.4 will warn "Consider using the built-in option for sanitizers ..."
+   # later on because it only checks whether the option starts with "-fsanitize",
+   # but there is no built-in option for adding a blacklist
+   tsan_blacklist = '-fsanitize-blacklist=@0@'.format(join_paths(meson.project_source_root(), 'build-support', 'tsan-blacklist.txt'))
+@@ -2132,7 +2066,6 @@ if host_machine.cpu_family() == 'x86_64' and cc.get_id() == 'gcc'
+   endif
+ endif
+ 
+-with_dri3_modifiers = false
+ with_dri3_explicit_sync = false
+ with_xcb_keysyms = false
+ if with_platform_x11
+@@ -2152,8 +2085,7 @@ if with_platform_x11
+     dep_x11 = dependency('x11')
+   endif
+   if (with_any_vk or with_glx == 'dri' or with_egl or
+-       (with_gallium_vdpau or with_gallium_va or
+-        with_gallium_omx != 'disabled'))
++       (with_gallium_vdpau or with_gallium_va))
+     dep_xcb = dependency('xcb')
+     dep_xcb_keysyms = dependency('xcb-keysyms', required : false)
+     with_xcb_keysyms = dep_xcb_keysyms.found()
+@@ -2166,25 +2098,19 @@ if with_platform_x11
+       error('libdrm required for gallium video statetrackers when using x11')
+     endif
+   endif
+-  if with_any_vk or with_egl or (with_glx == 'dri' and with_dri_platform == 'drm')
++  if with_dri_platform == 'drm'
+     dep_xcb_dri2 = dependency('xcb-dri2', version : '>= 1.8', required : with_x11_dri2)
+ 
+-    if with_dri3
+-      dep_xcb_dri3 = dependency('xcb-dri3')
+-      dep_xcb_present = dependency('xcb-present')
+-      # until xcb-dri3 has been around long enough to make a hard-dependency:
+-      if (dep_xcb_dri3.version().version_compare('>= 1.13') and
+-          dep_xcb_present.version().version_compare('>= 1.13'))
+-        with_dri3_modifiers = true
+-      endif
+-      if (dep_xcb_dri3.version().version_compare('>= 1.17') and
+-          dep_xcb_present.version().version_compare('>= 1.17'))
+-        with_dri3_explicit_sync = true
+-      endif
+-      dep_xcb_shm = dependency('xcb-shm')
+-      dep_xcb_sync = dependency('xcb-sync')
+-      dep_xshmfence = dependency('xshmfence', version : '>= 1.1')
++    dep_xcb_dri3 = dependency('xcb-dri3', version : '>= 1.13')
++    dep_xcb_present = dependency('xcb-present', version : '>= 1.13')
++    if (dep_xcb_dri3.version().version_compare('>= 1.17') and
++        dep_xcb_present.version().version_compare('>= 1.17'))
++      with_dri3_explicit_sync = true
+     endif
++    dep_xcb_shm = dependency('xcb-shm')
++    dep_xcb_sync = dependency('xcb-sync')
++    dep_xshmfence = dependency('xshmfence', version : '>= 1.1')
++    pre_args += '-DHAVE_X11_DRM'
+   endif
+   if with_glx == 'dri' or with_glx == 'xlib'
+     dep_glproto = dependency('glproto', version : '>= 1.4.14')
+@@ -2198,9 +2124,8 @@ if with_platform_x11
+     endif
+   endif
+   if (with_egl or
+-      with_dri3 or (
+-      with_gallium_vdpau or with_gallium_xa or
+-      with_gallium_omx != 'disabled'))
++      with_any_vk or
++      with_gallium_vdpau or with_gallium_xa)
+     dep_xcb_xfixes = dependency('xcb-xfixes')
+   endif
+   if with_xlib_lease or with_any_vk
+@@ -2220,12 +2145,6 @@ endif
+ if with_x11_dri2
+   pre_args += '-DHAVE_X11_DRI2'
+ endif
+-if with_dri3
+-  pre_args += '-DHAVE_DRI3'
+-endif
+-if with_dri3_modifiers
+-  pre_args += '-DHAVE_DRI3_MODIFIERS'
+-endif
+ if with_dri3_explicit_sync
+   pre_args += '-DHAVE_DRI3_EXPLICIT_SYNC'
+ endif
+@@ -2395,7 +2314,7 @@ if with_egl
+   if with_dri
+     egl_drivers += 'builtin:egl_dri2'
+   endif
+-  if with_dri3
++  if with_dri_platform == 'drm'
+     egl_drivers += 'builtin:egl_dri3'
+   endif
+   if with_platform_windows
+@@ -2437,9 +2356,6 @@ endif
+ if with_gallium_xa
+   video_apis += 'xa'
+ endif
+-if with_gallium_omx != 'disabled'
+-  video_apis += 'omx'
+-endif
+ video_summary += {'APIs': video_apis.length() != 0 ? video_apis : false}
+ summary(video_summary, section: 'Video', bool_yn: true, list_sep: ' ')
+ 
+@@ -2461,9 +2377,6 @@ if with_gallium
+   if with_gallium_vdpau
+     gallium_frontends += 'vdpau'
+   endif
+-  if with_gallium_omx != 'disabled'
+-    gallium_frontends += 'omx' + with_gallium_omx
+-  endif
+   if with_gallium_va
+     gallium_frontends += 'va'
+   endif
