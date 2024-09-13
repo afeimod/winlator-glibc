@@ -4,10 +4,9 @@ green='\033[0;32m'
 red='\033[0;31m'
 nocolor='\033[0m'
 
-deps="meson ninja patchelf unzip curl pip flex bison zip git"
+deps="meson ninja patchelf unzip curl pip3 flex bison zip git aarch64-linux-gnu-gcc-11 aarch64-linux-gnu-g++-11"
 workdir="$(pwd)/turnip_workdir"
 packagedir="$workdir/turnip_module"
-ndkver="android-ndk-r27"
 sdkver="28"
 mesasrc="https://gitlab.freedesktop.org/Pipetto-crypto/mesa.git"
 
@@ -40,7 +39,7 @@ prep () {
 
 check_deps(){
 	sudo apt remove meson
-	pip install meson PyYAML
+	pip3 install meson PyYAML
 
 	echo "Checking system for required Dependencies ..."
 	for deps_chk in $deps;
@@ -59,24 +58,12 @@ check_deps(){
 		fi
 
 	echo "Installing python Mako dependency (if missing) ..." $'\n'
-	pip install mako &> /dev/null
+	pip3 install mako &> /dev/null
 }
 
 prepare_workdir(){
 	echo "Creating and entering to work directory ..." $'\n'
 	mkdir -p "$workdir" && cd "$_"
-
-	if [ -z "${ANDROID_NDK_LATEST_HOME}" ]; then
-		if [ ! -n "$(ls -d android-ndk*)" ]; then
-			echo "Downloading android-ndk from google server (~640 MB) ..." $'\n'
-			curl https://dl.google.com/android/repository/"$ndkver"-linux.zip --output "$ndkver"-linux.zip &> /dev/null
-			###
-			echo "Exracting android-ndk to a folder ..." $'\n'
-			unzip "$ndkver"-linux.zip  &> /dev/null
-		fi
-	else	
-		echo "Using android ndk from github image"
-	fi
 
 	if [ -d mesa ]; then
 		echo "Removing old mesa ..." $'\n'
@@ -147,21 +134,15 @@ patch_to_description() {
 
 build_lib_for_android(){
 	echo "Creating meson cross file ..." $'\n'
-	if [ -z "${ANDROID_NDK_LATEST_HOME}" ]; then
-		ndk="$workdir/$ndkver/toolchains/llvm/prebuilt/linux-x86_64/bin"
-	else	
-		ndk="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
-	fi
-
 	cat <<EOF >"android-aarch64"
 [binaries]
-ar = '$ndk/llvm-ar'
-c = ['ccache', '$ndk/aarch64-linux-android$sdkver-clang']
-cpp = ['ccache', '$ndk/aarch64-linux-android$sdkver-clang++', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '-static-libstdc++']
-c_ld = 'lld'
-cpp_ld = 'lld'
-strip = '$ndk/aarch64-linux-android-strip'
-pkgconfig = ['env', 'PKG_CONFIG_LIBDIR=NDKDIR/pkgconfig', '/usr/bin/pkg-config']
+ar = 'aarch64-linux-gnu-ar'
+c = ['aarch64-linux-gnu-gcc-11']
+cpp = ['aarch64-linux-gnu-g++-11', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '-static-libstdc++']
+c_ld = 'gold'
+cpp_ld = 'gold'
+strip = 'aarch64-linux-gnu-strip'
+pkgconfig = ['env', '/usr/bin/pkg-config']
 [host_machine]
 system = 'android'
 cpu_family = 'aarch64'
@@ -170,10 +151,10 @@ endian = 'little'
 EOF
 
 	echo "Generating build files ..." $'\n'
-	meson build-android-aarch64 --cross-file "$workdir"/mesa/android-aarch64 -Dbuildtype=release -Dplatforms=android -Dplatform-sdk-version=$sdkver -Dandroid-stub=true -Dgallium-drivers= -Dvulkan-drivers=freedreno -Dvulkan-beta=true -Dfreedreno-kmds=kgsl -Db_lto=true &> "$workdir"/meson_log
+	meson build-android-aarch64 --cross-file "$workdir"/mesa/android-aarch64 -Dbuildtype=release -Dplatforms=android -Dplatform-sdk-version=$sdkver -Dandroid-stub=true -Dgallium-drivers= -Dvulkan-drivers=freedreno -Dvulkan-beta=true -Dfreedreno-kmds=kgsl -Db_lto=true
 
 	echo "Compiling build files ..." $'\n'
-	ninja -C build-android-aarch64 &> "$workdir"/ninja_log
+	ninja -C build-android-aarch64
 }
 
 extract_lib(){
