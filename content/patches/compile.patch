@@ -1,0 +1,88 @@
+diff --git a/include/vulkan/vk_android_native_buffer.h b/include/vulkan/vk_android_native_buffer.h
+index 21f82ef..1590dc7 100644
+--- a/include/vulkan/vk_android_native_buffer.h
++++ b/include/vulkan/vk_android_native_buffer.h
+@@ -1,9 +1,9 @@
+ /*
+- * MESA: buffer_handle_t is defined by all Mesa builds, even if
++ * MESA: vk_buffer_handle_t is defined by all Mesa builds, even if
+  * one is building for a non-Android target.  This avoids unnecessary
+  * conditionals in driver code.
+  *
+- * We don't need to define buffer_handle_t locally when (__ANDROID__)
++ * We don't need to define vk_buffer_handle_t locally when (__ANDROID__)
+  * or ANDROID are set.  Here's the distinction between the two:
+  *
+  * - AOSP always defines ANDROID, since it just means one is using the
+@@ -21,13 +21,13 @@
+ 
+ #include <cutils/native_handle.h>
+ #if ANDROID_API_LEVEL < 28
+-/* buffer_handle_t was defined in the deprecated system/window.h */
+-typedef const native_handle_t *buffer_handle_t;
++/* vk_buffer_handle_t was defined in the deprecated system/window.h */
++typedef const native_handle_t *vk_buffer_handle_t;
+ #endif
+ 
+ #else
+ 
+-typedef void *buffer_handle_t;
++typedef void *vk_buffer_handle_t;
+ 
+ #endif
+ 
+@@ -151,7 +151,7 @@ typedef struct {
+ typedef struct {
+     VkStructureType                   sType;
+     const void*                       pNext;
+-    buffer_handle_t                   handle;
++    vk_buffer_handle_t                handle;
+     int                               stride;
+     int                               format;
+     int                               usage; /* DEPRECATED in SPEC_VERSION 6 */
+diff --git a/src/util/cnd_monotonic.c b/src/util/cnd_monotonic.c
+index 71d9ac0..4fbab73 100644
+--- a/src/util/cnd_monotonic.c
++++ b/src/util/cnd_monotonic.c
+@@ -132,7 +132,7 @@ u_cnd_monotonic_timedwait(struct u_cnd_monotonic *cond, mtx_t *mtx,
+    timespec_sub_saturate(&rel_time, abs_time, &now_time);
+    int rt = pthread_cond_timedwait_relative_np(&cond->cond, mtx, &rel_time);
+ #else
+-   int rt = pthread_cond_timedwait(&cond->cond, mtx, abs_time);
++   int rt = pthread_cond_timedwait(&cond->cond, (pthread_mutex_t*)mtx, abs_time);
+ #endif
+    if (rt == ETIMEDOUT)
+       return thrd_timedout;
+@@ -151,6 +151,6 @@ u_cnd_monotonic_wait(struct u_cnd_monotonic *cond, mtx_t *mtx)
+                             (PCRITICAL_SECTION)mtx, INFINITE);
+    return thrd_success;
+ #else
+-   return (pthread_cond_wait(&cond->cond, mtx) == 0) ? thrd_success : thrd_error;
++   return (pthread_cond_wait(&cond->cond, (pthread_mutex_t*)mtx) == 0) ? thrd_success : thrd_error;
+ #endif
+ }
+diff --git a/src/util/u_debug_stack.h b/src/util/u_debug_stack.h
+index f729ba6..a2fd292 100644
+--- a/src/util/u_debug_stack.h
++++ b/src/util/u_debug_stack.h
+@@ -28,6 +28,7 @@
+ #ifndef U_DEBUG_STACK_H_
+ #define U_DEBUG_STACK_H_
+ 
++#include <stdint.h>
+ #include <stdio.h>
+ 
+ #include "util/detect_os.h"
+diff --git a/src/virtio/vulkan/vn_android.c b/src/virtio/vulkan/vn_android.c
+index 9f85470..14cfde5 100644
+--- a/src/virtio/vulkan/vn_android.c
++++ b/src/virtio/vulkan/vn_android.c
+@@ -98,7 +98,7 @@ struct vn_android_gralloc_buffer_properties {
+ 
+ static bool
+ vn_android_gralloc_get_buffer_properties(
+-   buffer_handle_t handle,
++   vk_buffer_handle_t handle,
+    struct vn_android_gralloc_buffer_properties *out_props)
+ {
+    struct u_gralloc *gralloc = _vn_android_gralloc.gralloc;

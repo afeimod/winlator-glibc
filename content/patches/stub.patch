@@ -1,0 +1,59 @@
+diff --git a/include/android_stub/android/native_window.h b/include/android_stub/android/native_window.h
+index a3a45e3..e460595 100644
+--- a/include/android_stub/android/native_window.h
++++ b/include/android_stub/android/native_window.h
+@@ -37,6 +37,7 @@
+ #include <sys/cdefs.h>
+ 
+ #include <android/data_space.h>
++#include <android/log.h>
+ #include <android/hardware_buffer.h>
+ #include <android/rect.h>
+ 
+diff --git a/include/android_stub/cutils/trace.h b/include/android_stub/cutils/trace.h
+index 24c6ae6..f73fec8 100644
+--- a/include/android_stub/cutils/trace.h
++++ b/include/android_stub/cutils/trace.h
+@@ -18,7 +18,15 @@
+ #define _LIBS_CUTILS_TRACE_H
+ 
+ #include <inttypes.h>
++#if defined(HAVE_STD_ATOMIC)
++#ifdef __cplusplus
++#include <atomic>
++#define _Atomic(T) atomic<T>
++using namespace std;
++#else
+ #include <stdatomic.h>
++#endif
++#endif
+ #include <stdbool.h>
+ #include <stdint.h>
+ #include <stdio.h>
+@@ -113,7 +121,7 @@ void atrace_set_tracing_enabled(bool enabled);
+  * of this header to always call into atrace_setup, in which we call
+  * atrace_init unconditionally.
+  */
+-extern atomic_bool atrace_is_ready;
++//extern atomic_bool atrace_is_ready;
+ 
+ /**
+  * Set of ATRACE_TAG flags to trace for, initialized to ATRACE_TAG_NOT_READY.
+diff --git a/include/android_stub/ndk/sync.h b/include/android_stub/ndk/sync.h
+index 38ccb68..2159606 100644
+--- a/include/android_stub/ndk/sync.h
++++ b/include/android_stub/ndk/sync.h
+@@ -29,8 +29,13 @@
+ #include <stdint.h>
+ #include <sys/cdefs.h>
+ 
++#include <android/log.h>
+ #include <linux/sync_file.h>
+ 
++#ifndef NULL
++#define NULL 0
++#endif
++
+ __BEGIN_DECLS
+ 
+ /* Fences indicate the status of an asynchronous task. They are initially

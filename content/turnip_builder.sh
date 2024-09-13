@@ -12,8 +12,10 @@ mesasrc="https://gitlab.freedesktop.org/Pipetto-crypto/mesa.git"
 
 #array of string => commit/branch;patch args
 base_patches=(
+	"Compile;../../patches/compile.patch;"
 	"Quest3;../../patches/quest3.patch;"
 	"Meson;../../patches/meson.patch;"
+	"Stub;../../patches/stub.patch;"
 )
 failed_patches=()
 commit=""
