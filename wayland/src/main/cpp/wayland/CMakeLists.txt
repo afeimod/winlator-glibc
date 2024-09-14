@@ -8,14 +8,17 @@ set(WAYLAND_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(WAYLAND_SRC_DIR ${WAYLAND_DIR}/repo/src)
 set(WAYLAND_PROTOCOL_DIR ${WAYLAND_DIR}/repo/protocol)
 set(AUTOGEN_DIR ${WAYLAND_DIR}/autogen)
+set(TMP_DIR ${AUTOGEN_DIR}/tmp)
 set(PROTOCOL_INSTALL_DIR ${WAYLAND_DIR}/protocol)
 
 set(CONFIG_H_IN ${WAYLAND_DIR}/config.h.in)
-set(CONFIG_H_DEST_1 ${AUTOGEN_DIR}/config.h)
-set(CONFIG_H_DEST_2 ${WAYLAND_SRC_DIR}/../config.h)
+set(CONFIG_H_DEST ${AUTOGEN_DIR}/config.h)
 
 set(VERSION_H_IN ${WAYLAND_SRC_DIR}/wayland-version.h.in)
 set(VERSION_H_DEST ${AUTOGEN_DIR}/wayland-version.h)
+
+set(WAYLAND_OS_C ${WAYLAND_SRC_DIR}/wayland-os.c)
+set(WAYLAND_OS_C_TMP ${TMP_DIR}/wayland-os.c)
 
 include(CheckFunctionExists)
 include(CheckIncludeFile)
@@ -61,13 +64,8 @@ set(PACKAGE ${WAYLAND_PACKAGE})
 set(PACKAGE_VERSION ${WAYLAND_VERSION})
 configure_file(
         ${CONFIG_H_IN}
-        ${VERSION_H_DEST}
+        ${CONFIG_H_DEST}
         @ONLY
-)
-configure_file(
-        ${CONFIG_H_DEST_1}
-        ${CONFIG_H_DEST_2}
-        COPYONLY
 )
 
 # Generate wayland-version.h
@@ -101,10 +99,16 @@ add_library(
 target_include_directories(wayland-util PRIVATE ${WAYLAND_SRC_DIR})
 
 # wayland-private
+configure_file(
+        ${WAYLAND_OS_C}
+        ${WAYLAND_OS_C_TMP}
+        COPYONLY
+)
+
 add_library(
         wayland-private STATIC
         ${WAYLAND_SRC_DIR}/connection.c
-        ${WAYLAND_SRC_DIR}/wayland-os.c
+        ${WAYLAND_OS_C_TMP}
 )
 
 target_link_libraries(
