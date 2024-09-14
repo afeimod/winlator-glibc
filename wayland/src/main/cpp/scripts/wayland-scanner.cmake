@@ -1,12 +1,10 @@
-# Use Wayland-Scanner to install protocol
-if (WIN32)
-    set(SCANNER_BIN ${SCRIPTS_BIN_DIR}/wayland-scanner)
-elseif (UNIX AND NOT APPLE)
+# Use prebuilt wayland-scanner to install protocol
+if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Windows")
     set(SCANNER_BIN ${SCRIPTS_BIN_DIR}/wayland-scanner.exe)
-elseif (APPLE)
-    message(FATAL_ERROR "This project is not supported on MacOS.")
+elseif (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
+    set(SCANNER_BIN ${SCRIPTS_BIN_DIR}/wayland-scanner)
 else ()
-    message(FATAL_ERROR "This project is not supported on Unknown System.")
+    message(FATAL_ERROR "Prebuilt wayland-scanner not supports your system.")
 endif ()
 
 function(wayland_scanner option type input output)
