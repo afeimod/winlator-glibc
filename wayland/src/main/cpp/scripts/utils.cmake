@@ -1,0 +1,6 @@
+function(check_repo path)
+    file(GLOB FILES_IN_DIRECTORY RELATIVE ${path} *)
+    if(FILES_IN_DIRECTORY STREQUAL "")
+        message(FATAL_ERROR "Repository is empty, please execute 'git submodule update' before building.")
+    endif ()
+endfunction()

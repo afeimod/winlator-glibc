@@ -1,3 +1,9 @@
 [submodule "app/src/main/cpp/OpenXR-SDK"]
 	path = app/src/main/cpp/OpenXR-SDK
 	url = https://github.com/KhronosGroup/OpenXR-SDK.git
+[submodule "wayland/src/main/cpp/wayland/repo"]
+	path = wayland/src/main/cpp/wayland/repo
+	url = https://gitlab.freedesktop.org/wayland/wayland.git
+[submodule "wayland/src/main/cpp/ffi/repo"]
+	path = wayland/src/main/cpp/ffi/repo
+	url = https://github.com/libffi/libffi.git

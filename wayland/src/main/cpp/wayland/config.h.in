@@ -1,0 +1,15 @@
+#pragma once
+#cmakedefine HAVE_ACCEPT4
+#cmakedefine HAVE_BROKEN_MSG_CMSG_CLOEXEC @HAVE_BROKEN_MSG_CMSG_CLOEXEC@
+#cmakedefine HAVE_MEMFD_CREATE
+#cmakedefine HAVE_MKOSTEMP
+#cmakedefine HAVE_MREMAP
+#cmakedefine HAVE_POSIX_FALLOCATE
+#cmakedefine HAVE_PRCTL
+#cmakedefine HAVE_STRNDUP
+#cmakedefine HAVE_SYS_PRCTL_H
+#cmakedefine HAVE_PROCCTL_H
+#cmakedefine HAVE_SYS_UCRED_H
+#cmakedefine HAVE_XUCRED_CR_PID @HAVE_XUCRED_CR_PID@
+#cmakedefine PACKAGE "@PACKAGE@"
+#cmakedefine PACKAGE_VERSION "@PACKAGE_VERSION@"
