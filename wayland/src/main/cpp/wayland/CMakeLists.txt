@@ -7,6 +7,8 @@ set(WAYLAND_VERSION "1.23.1")
 set(WAYLAND_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(WAYLAND_SRC_DIR ${WAYLAND_DIR}/repo/src)
 set(WAYLAND_PROTOCOL_DIR ${WAYLAND_DIR}/repo/protocol)
+set(WAYLAND_CURSOR_DIR ${WAYLAND_DIR}/repo/cursor)
+set(WAYLAND_EGL_DIR ${WAYLAND_DIR}/repo/egl)
 set(AUTOGEN_DIR ${WAYLAND_DIR}/autogen)
 set(TMP_DIR ${AUTOGEN_DIR}/tmp)
 set(PROTOCOL_INSTALL_DIR ${WAYLAND_DIR}/protocol)
@@ -149,15 +151,48 @@ add_library(
         ${PROTOCOL_INSTALL_DIR}/wayland-protocol.c
 )
 
-target_link_libraries(wayland-client PRIVATE
+target_link_libraries(
+        wayland-client PRIVATE
         ffi
         wayland-util
         wayland-private
 )
 
-target_include_directories(wayland-client PUBLIC
+target_include_directories(
+        wayland-client PUBLIC
         ${WAYLAND_SRC_DIR}
         ${PROTOCOL_INSTALL_DIR}
 )
 
 target_include_directories(wayland-client PRIVATE ${AUTOGEN_DIR})
+
+# wayland-cursor
+add_library(
+        wayland-cursor SHARED
+        ${WAYLAND_CURSOR_DIR}/wayland-cursor.c
+        ${WAYLAND_CURSOR_DIR}/os-compatibility.c
+        ${WAYLAND_CURSOR_DIR}/xcursor.c
+)
+
+target_link_libraries(wayland-cursor PUBLIC wayland-client)
+
+target_include_directories(wayland-cursor PUBLIC ${WAYLAND_CURSOR_DIR})
+
+target_include_directories(
+        wayland-cursor PRIVATE
+        ${AUTOGEN_DIR}
+        ${WAYLAND_SRC_DIR}
+        ${PROTOCOL_INSTALL_DIR}
+)
+
+# wayland-egl
+add_library(wayland-egl SHARED ${WAYLAND_EGL_DIR}/wayland-egl.c)
+
+target_include_directories(wayland-egl PUBLIC ${WAYLAND_EGL_DIR})
+
+target_include_directories(
+        wayland-egl PRIVATE
+        ${AUTOGEN_DIR}
+        ${WAYLAND_SRC_DIR}
+        ${PROTOCOL_INSTALL_DIR}
+)
