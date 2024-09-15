@@ -7,4 +7,5 @@ include(scripts/utils.cmake)
 include(scripts/wayland-scanner.cmake)
 
 add_subdirectory(ffi)
+add_subdirectory(pixman)
 add_subdirectory(wayland)

@@ -7,3 +7,6 @@
 [submodule "wayland/src/main/cpp/ffi/repo"]
 	path = wayland/src/main/cpp/ffi/repo
 	url = https://github.com/libffi/libffi.git
+[submodule "wayland/src/main/cpp/pixman/repo"]
+	path = wayland/src/main/cpp/pixman/repo
+	url = https://gitlab.freedesktop.org/pixman/pixman.git
