@@ -27,17 +27,9 @@ enable_language(ASM)
 check_repo(${FFI_DIR}/repo)
 
 # Only aarch64
-check_c_source_compiles("
-    #ifndef __aarch64__
-        #error Support aarch64 only.
-    #endif
-" IS_AARCH64)
-if (NOT DEFINED IS_AARCH64)
-    message(FATAL_ERROR "Support aarch64 only.")
-endif ()
+aarch64_only()
 
 # Generate fficonfig.h
-file(MAKE_DIRECTORY ${AUTOGEN_DIR})
 set(EH_FRAME_FLAGS "a")
 set(HAVE_LONG_DOUBLE 1)
 set(HAVE_RO_EH_FRAME 1)
@@ -155,4 +147,6 @@ add_library(
         ${FFI_SRC_DIR}/aarch64/sysv.S
 )
 
-target_include_directories(ffi PUBLIC ${FFI_INCLUDE_DIR} ${AUTOGEN_DIR} ${FFI_SRC_DIR}/aarch64)
+target_include_directories(ffi PUBLIC ${AUTOGEN_DIR} ${FFI_SRC_DIR}/aarch64)
+
+target_include_directories(ffi PRIVATE ${FFI_INCLUDE_DIR})
