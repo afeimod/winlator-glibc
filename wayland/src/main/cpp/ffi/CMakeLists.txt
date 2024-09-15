@@ -21,6 +21,11 @@ include(CheckIncludeFile)
 include(CheckCSourceCompiles)
 include(CheckTypeSize)
 
+enable_language(ASM)
+
+# Check if need to update submodule
+check_repo(${FFI_DIR}/repo)
+
 # Only aarch64
 check_c_source_compiles("
     #ifndef __aarch64__
@@ -85,20 +90,18 @@ check_c_source_compiles("
     __attribute__((visibility(\"hidden\"))) void test_hidden_visibility(void);
     void test_hidden_visibility(void) {}
 " HAVE_HIDDEN_VISIBILITY_ATTRIBUTE)
-# FIXME: check pauth support
-#check_c_source_compiles("
-#    .section .text
-#    .global _start
-#    _start:
-#        pacia x0, x1
-#        autia x0, x1
-#        pacib x0, x1
-#        autib x0, x1
-#        blraaz x0
-#        retab x0
-#        nop
-#" HAVE_PTRAUTH)
-set(HAVE_PTRAUTH 0)
+check_c_source_compiles("
+    .section .text
+    .global _start
+    _start:
+        pacia x0, x1
+        autia x0, x1
+        pacib x0, x1
+        autib x0, x1
+        blraaz x0
+        retab x0
+        nop
+" HAVE_PTRAUTH)
 check_c_source_compiles("
     #include <features.h>
     #if defined(__GNUC__) && defined(_GNU_SOURCE) && defined(__VERSION__)
@@ -139,8 +142,6 @@ add_compile_options(
 )
 
 # libffi
-enable_language(ASM)
-
 add_library(
         ffi SHARED
         ${FFI_SRC_DIR}/closures.c
