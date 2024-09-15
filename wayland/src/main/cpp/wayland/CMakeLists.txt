@@ -92,6 +92,11 @@ add_compile_options(
         -fvisibility=hidden
 )
 
+# wayland-protocol-core
+add_library(wayland-protocol-core INTERFACE)
+
+target_include_directories(wayland-protocol-core INTERFACE ${PROTOCOL_INSTALL_DIR})
+
 # wayland-util
 add_library(
         wayland-util STATIC
@@ -134,12 +139,12 @@ target_link_libraries(
         ffi
         wayland-util
         wayland-private
+        wayland-protocol-core
 )
 
 target_include_directories(
         wayland-server PUBLIC
         ${WAYLAND_SRC_DIR}
-        ${PROTOCOL_INSTALL_DIR}
 )
 
 target_include_directories(wayland-server PRIVATE ${AUTOGEN_DIR})
@@ -156,12 +161,12 @@ target_link_libraries(
         ffi
         wayland-util
         wayland-private
+        wayland-protocol-core
 )
 
 target_include_directories(
         wayland-client PUBLIC
         ${WAYLAND_SRC_DIR}
-        ${PROTOCOL_INSTALL_DIR}
 )
 
 target_include_directories(wayland-client PRIVATE ${AUTOGEN_DIR})
@@ -174,7 +179,7 @@ add_library(
         ${WAYLAND_CURSOR_DIR}/xcursor.c
 )
 
-target_link_libraries(wayland-cursor PUBLIC wayland-client)
+target_link_libraries(wayland-cursor PUBLIC wayland-client wayland-protocol-core)
 
 target_include_directories(wayland-cursor PUBLIC ${WAYLAND_CURSOR_DIR})
 
@@ -182,11 +187,12 @@ target_include_directories(
         wayland-cursor PRIVATE
         ${AUTOGEN_DIR}
         ${WAYLAND_SRC_DIR}
-        ${PROTOCOL_INSTALL_DIR}
 )
 
 # wayland-egl
 add_library(wayland-egl SHARED ${WAYLAND_EGL_DIR}/wayland-egl.c)
+
+target_link_libraries(wayland-egl PUBLIC wayland-protocol-core)
 
 target_include_directories(wayland-egl PUBLIC ${WAYLAND_EGL_DIR})
 
@@ -194,5 +200,4 @@ target_include_directories(
         wayland-egl PRIVATE
         ${AUTOGEN_DIR}
         ${WAYLAND_SRC_DIR}
-        ${PROTOCOL_INSTALL_DIR}
 )
