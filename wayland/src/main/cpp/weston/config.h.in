@@ -27,3 +27,18 @@
 #cmakedefine MODULEDIR "@MODULEDIR@"
 #cmakedefine LIBWESTON_MODULEDIR "@LIBWESTON_MODULEDIR@"
 #cmakedefine WESTON_NATIVE_BACKEND "@WESTON_NATIVE_BACKEND@"
+
+// Base on shared/meson.build
+#cmakedefine HAVE_PANGO @HAVE_PANGO@
+#cmakedefine HAVE_JPEG @HAVE_JPEG@
+#cmakedefine HAVE_WEBP @HAVE_WEBP@
+
+// Base on xwayland/meson.build
+#cmakedefine HAVE_XWAYLAND_LISTENFD @HAVE_XWAYLAND_LISTENFD@
+
+// Base on frontend/meson.build
+#cmakedefine BUILD_XWAYLAND @BUILD_XWAYLAND@
+#cmakedefine XSERVER_PATH "@XSERVER_PATH@"
+
+// Base on desktop-shell/meson.build
+#cmakedefine WESTON_SHELL_CLIENT "@WESTON_SHELL_CLIENT@"
