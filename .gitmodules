@@ -10,6 +10,9 @@
 [submodule "wayland/src/main/cpp/pixman/repo"]
 	path = wayland/src/main/cpp/pixman/repo
 	url = https://gitlab.freedesktop.org/pixman/pixman.git
+[submodule "wayland/src/main/cpp/weston/repo"]
+	path = wayland/src/main/cpp/weston/repo
+	url = https://github.com/longjunyu2/weston.git
 [submodule "wayland/src/main/cpp/wayland-protocols/repo"]
 	path = wayland/src/main/cpp/wayland-protocols/repo
 	url = https://gitlab.freedesktop.org/wayland/wayland-protocols.git
