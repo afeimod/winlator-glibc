@@ -221,6 +221,4 @@ add_library(
 
 target_link_libraries(pixman PRIVATE pixman-arm-neon)
 
-target_include_directories(pixman PUBLIC ${PIXMAN_SRC_DIR})
-
-target_include_directories(pixman PRIVATE ${AUTOGEN_DIR})
+target_include_directories(pixman PUBLIC ${PIXMAN_SRC_DIR} ${AUTOGEN_DIR})

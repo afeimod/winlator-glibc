@@ -95,9 +95,11 @@ add_compile_options(
 # wayland-protocol-core
 add_library(wayland-protocol-core STATIC ${PROTOCOL_INSTALL_DIR}/wayland-protocol.c)
 
-target_include_directories(wayland-protocol-core PRIVATE ${WAYLAND_SRC_DIR})
-
-target_include_directories(wayland-protocol-core PUBLIC ${PROTOCOL_INSTALL_DIR})
+target_include_directories(
+        wayland-protocol-core PUBLIC
+        ${PROTOCOL_INSTALL_DIR}
+        ${WAYLAND_SRC_DIR}
+)
 
 # wayland-util
 add_library(
@@ -136,7 +138,7 @@ add_library(
 )
 
 target_link_libraries(
-        wayland-server PRIVATE
+        wayland-server PUBLIC
         ffi
         wayland-util
         wayland-private
@@ -146,9 +148,8 @@ target_link_libraries(
 target_include_directories(
         wayland-server PUBLIC
         ${WAYLAND_SRC_DIR}
+        ${AUTOGEN_DIR}
 )
-
-target_include_directories(wayland-server PRIVATE ${AUTOGEN_DIR})
 
 # wayland-client
 add_library(
@@ -157,7 +158,7 @@ add_library(
 )
 
 target_link_libraries(
-        wayland-client PRIVATE
+        wayland-client PUBLIC
         ffi
         wayland-util
         wayland-private
@@ -167,9 +168,8 @@ target_link_libraries(
 target_include_directories(
         wayland-client PUBLIC
         ${WAYLAND_SRC_DIR}
+        ${AUTOGEN_DIR}
 )
-
-target_include_directories(wayland-client PRIVATE ${AUTOGEN_DIR})
 
 # wayland-cursor
 add_library(
@@ -181,10 +181,9 @@ add_library(
 
 target_link_libraries(wayland-cursor PUBLIC wayland-client wayland-protocol-core)
 
-target_include_directories(wayland-cursor PUBLIC ${WAYLAND_CURSOR_DIR})
-
 target_include_directories(
-        wayland-cursor PRIVATE
+        wayland-cursor PUBLIC
+        ${WAYLAND_CURSOR_DIR}
         ${AUTOGEN_DIR}
         ${WAYLAND_SRC_DIR}
 )
@@ -194,10 +193,9 @@ add_library(wayland-egl SHARED ${WAYLAND_EGL_DIR}/wayland-egl.c)
 
 target_link_libraries(wayland-egl PUBLIC wayland-protocol-core)
 
-target_include_directories(wayland-egl PUBLIC ${WAYLAND_EGL_DIR})
-
 target_include_directories(
-        wayland-egl PRIVATE
+        wayland-egl PUBLIC
+        ${WAYLAND_EGL_DIR}
         ${AUTOGEN_DIR}
         ${WAYLAND_SRC_DIR}
 )

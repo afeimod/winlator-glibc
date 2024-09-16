@@ -103,7 +103,10 @@ foreach (PROTOCOL_ITEM_STR IN LISTS PROTOCOLS_LIST_FLAT)
 
     # create interface target for other package to use
     # name rule: wayland-protocols-[protocol_name]-[protocol_type]-[protocol_version]
-    set(TARGET_NAME "wayland-protocols-${PROTOCOL_NAME}-${PROTOCOL_TYPE}")
+    set(TARGET_NAME "wayland-protocols-${PROTOCOL_NAME}")
+    if (PROTOCOL_TYPE STREQUAL "unstable")
+        string(APPEND TARGET_NAME "-${PROTOCOL_TYPE}")
+    endif ()
     if (NOT PROTOCOL_TYPE STREQUAL "stable" AND NOT PROTOCOL_VERSION STREQUAL "")
         string(APPEND TARGET_NAME "-${PROTOCOL_VERSION}")
     endif ()
