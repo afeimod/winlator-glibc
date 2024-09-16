@@ -93,9 +93,11 @@ add_compile_options(
 )
 
 # wayland-protocol-core
-add_library(wayland-protocol-core INTERFACE)
+add_library(wayland-protocol-core STATIC ${PROTOCOL_INSTALL_DIR}/wayland-protocol.c)
 
-target_include_directories(wayland-protocol-core INTERFACE ${PROTOCOL_INSTALL_DIR})
+target_include_directories(wayland-protocol-core PRIVATE ${WAYLAND_SRC_DIR})
+
+target_include_directories(wayland-protocol-core PUBLIC ${PROTOCOL_INSTALL_DIR})
 
 # wayland-util
 add_library(
@@ -103,7 +105,7 @@ add_library(
         ${WAYLAND_SRC_DIR}/wayland-util.c
 )
 
-target_include_directories(wayland-util PRIVATE ${WAYLAND_SRC_DIR})
+target_include_directories(wayland-util PUBLIC ${WAYLAND_SRC_DIR})
 
 # wayland-private
 configure_file(
@@ -131,7 +133,6 @@ add_library(
         ${WAYLAND_SRC_DIR}/wayland-server.c
         ${WAYLAND_SRC_DIR}/wayland-shm.c
         ${WAYLAND_SRC_DIR}/event-loop.c
-        ${PROTOCOL_INSTALL_DIR}/wayland-protocol.c
 )
 
 target_link_libraries(
@@ -153,7 +154,6 @@ target_include_directories(wayland-server PRIVATE ${AUTOGEN_DIR})
 add_library(
         wayland-client SHARED
         ${WAYLAND_SRC_DIR}/wayland-client.c
-        ${PROTOCOL_INSTALL_DIR}/wayland-protocol.c
 )
 
 target_link_libraries(
