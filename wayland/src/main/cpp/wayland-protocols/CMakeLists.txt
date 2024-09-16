@@ -107,6 +107,10 @@ foreach (PROTOCOL_ITEM_STR IN LISTS PROTOCOLS_LIST_FLAT)
     if (NOT PROTOCOL_TYPE STREQUAL "stable" AND NOT PROTOCOL_VERSION STREQUAL "")
         string(APPEND TARGET_NAME "-${PROTOCOL_VERSION}")
     endif ()
-    add_library(${TARGET_NAME} INTERFACE)
-    target_include_directories(${TARGET_NAME} INTERFACE ${PROTOCOL_INSTALL_DIR})
+
+    # NOT all symbols will be resolved,
+    # so dependencies need to be managed manually when linking these libraries.
+    add_library(${TARGET_NAME} STATIC ${PROTOCOL_INSTALL_DIR}/${BASE_NAME}-protocol.c)
+    target_link_libraries(${TARGET_NAME} PRIVATE wayland-util wayland-protocol-core)
+    target_include_directories(${TARGET_NAME} PUBLIC ${PROTOCOL_INSTALL_DIR})
 endforeach ()
