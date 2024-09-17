@@ -197,7 +197,7 @@ add_library(
 )
 
 target_link_libraries(
-        weston PRIVATE
+        weston PUBLIC
         wayland-server
         pixman
         xkbcommon
@@ -226,13 +226,29 @@ target_link_libraries(
         # libweston/desktop
         wayland-protocols-xdg-shell-unstable-v6
         wayland-protocols-xdg-shell
+        # android
+        android
+        log
 )
 
 target_include_directories(weston PUBLIC ${WESTON_INCLUDE_DIR})
 
 target_include_directories(
-        weston PRIVATE
+        weston PUBLIC
         ${AUTOGEN_DIR}
         ${WESTON_SRC_DIR}
         ${WESTON_DIR}/repo
+)
+
+# android_backend
+add_library(
+        weston-backend-android SHARED
+        ${WESTON_SRC_DIR}/backend-android/android.c
+)
+
+target_link_libraries(
+        weston-backend-android PUBLIC
+        weston
+        # weston-wrapper
+        weston-wrapper-shared
 )
