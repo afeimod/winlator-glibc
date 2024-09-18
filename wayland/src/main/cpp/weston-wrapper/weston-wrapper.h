@@ -3,10 +3,6 @@
 
 #include "pixman.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef EXPORT
 #define EXPORT __attribute__((visibility("default")))
 #endif
@@ -21,8 +17,5 @@ EXPORT void wrapper_notify_android_repaint_output_pixman(pixman_image_t* image);
 
 EXPORT void wrapper_notify_android_destroy();
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif //WESTON_WRAPPER_H
