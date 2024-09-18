@@ -46,6 +46,7 @@ Java_org_freedesktop_wayland_WestonJni_destroy(JNIEnv* env, jobject thiz, jlong 
     struct WestonJni* westonJni = getWestonJniFromPtr(env, ptr);
 
     if (westonJni) {
+        free(westonJni->buffer);
         free(westonJni);
     }
 }
