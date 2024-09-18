@@ -123,6 +123,23 @@ add_compile_options(
         -fvisibility=hidden
 )
 
+# weston-public
+add_library(weston-public INTERFACE)
+
+target_include_directories(
+        weston-public INTERFACE
+        ${WESTON_INCLUDE_DIR}
+)
+
+target_link_libraries(
+        weston-public INTERFACE
+        wayland-server
+        pixman
+        xkbcommon
+        android
+        log
+)
+
 # weston-shared
 add_library(
         weston-shared STATIC
@@ -135,17 +152,14 @@ add_library(
 )
 
 target_link_libraries(
-        weston-shared PRIVATE
+        weston-shared PUBLIC
+        weston-public
         wayland-client
-        pixman
-        egl
-        xkbcommon
 )
 
 target_include_directories(
-        weston-shared PRIVATE
+        weston-shared PUBLIC
         ${WESTON_SHARED_DIR}
-        ${WESTON_INCLUDE_DIR}
         ${AUTOGEN_DIR}
 )
 
@@ -198,9 +212,6 @@ add_library(
 
 target_link_libraries(
         weston PUBLIC
-        wayland-server
-        pixman
-        xkbcommon
         weston-shared
         # libweston
         weston-color-management-v1
@@ -226,12 +237,7 @@ target_link_libraries(
         # libweston/desktop
         wayland-protocols-xdg-shell-unstable-v6
         wayland-protocols-xdg-shell
-        # android
-        android
-        log
 )
-
-target_include_directories(weston PUBLIC ${WESTON_INCLUDE_DIR})
 
 target_include_directories(
         weston PUBLIC
