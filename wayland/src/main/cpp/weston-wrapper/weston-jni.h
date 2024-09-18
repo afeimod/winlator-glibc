@@ -7,11 +7,16 @@
 #include <android/native_window_jni.h>
 
 struct WestonJni {
+    jobject javaObject;
     ANativeWindow* window;
     ANativeWindow_Buffer* buffer;
-    struct weston_compositor* westonCompositorPtr;
-    struct wl_display* wlDisplayPtr;
-    struct weston_android_backend_config* backendConfigPtr;
+
+    struct wl_display* display;
+    struct weston_log_context* logCtx;
+    struct weston_compositor* compositor;
+    struct weston_android_backend_config* backendConfig;
+    struct weston_backend* backend;
+    bool display_running;
 
     void (*output_create)();
     void (*output_destroy)();
