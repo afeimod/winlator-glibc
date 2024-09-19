@@ -246,15 +246,17 @@ target_include_directories(
         ${WESTON_DIR}/repo
 )
 
-# android_backend
+# backend-android
 add_library(
-        weston-backend-android SHARED
+        backend-android SHARED
         ${WESTON_SRC_DIR}/backend-android/android.c
 )
 
 target_link_libraries(
-        weston-backend-android PUBLIC
+        backend-android PUBLIC
         weston
         # weston-wrapper
         weston-wrapper-shared
 )
+
+set_target_properties(backend-android PROPERTIES PREFIX "")
