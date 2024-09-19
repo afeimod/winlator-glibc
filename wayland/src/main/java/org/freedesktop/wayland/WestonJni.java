@@ -11,6 +11,8 @@ public class WestonJni {
     }
 
     public static final long NullPtr = 0;
+    public static final int RendererPixman = 0;
+    public static final int RendererGL = 1;
     private long nativePtr = NullPtr;
     private boolean needInit = true;
     private Future<?> displayFuture;
@@ -79,6 +81,30 @@ public class WestonJni {
         return ret;
     }
 
+    public void setScreenSize(int width, int height) {
+        if (nativePtr == NullPtr)
+            throw new PtrException("NativePtr is null.");
+
+        if (!setScreenSize(nativePtr, width, height))
+            throw new DisplayException("Failed to set screen size.");
+    }
+
+    public void setRenderer(int rendererType) {
+        if (nativePtr == NullPtr)
+            throw new PtrException("NativePtr is null.");
+
+        if (!setRenderer(nativePtr, rendererType))
+            throw new DisplayException("Failed to set renderer type.");
+    }
+
+    public void setRefreshRate(int rate) {
+        if (nativePtr == NullPtr)
+            throw new PtrException("NativePtr is null.");
+
+        if (!setRefreshRate(nativePtr, rate))
+            throw new DisplayException("Failed to set refresh rate.");
+    }
+
     @Override
     protected void finalize() throws Throwable {
         if (nativePtr != NullPtr) {
@@ -97,4 +123,7 @@ public class WestonJni {
     private native void displayRun(long ptr);
     private native void displayTerminate(long ptr);
     private native boolean isDisplayRunning(long ptr);
+    private native boolean setScreenSize(long ptr, int width, int height);
+    private native boolean setRenderer(long ptr, int renderer);
+    private native boolean setRefreshRate(long ptr, int refreshRate);
 }

@@ -26,6 +26,9 @@ public class WestonActivity extends AppCompatActivity {
             public void surfaceCreated(@NonNull SurfaceHolder holder) {
                 mWeston.setRenderSurface(holder.getSurface());
                 if (firstCreated) {
+                    mWeston.setScreenSize(1280, 720);
+                    mWeston.setRefreshRate(60);
+                    mWeston.setRenderer(WestonJni.RendererPixman);
                     if (!mWeston.initWeston()) {
                         throw new RuntimeException("Failed to init weston");
                     }
