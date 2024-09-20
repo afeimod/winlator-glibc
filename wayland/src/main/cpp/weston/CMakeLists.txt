@@ -208,6 +208,8 @@ add_library(
         ${WESTON_SRC_DIR}/desktop/xwayland.c
         ${WESTON_SRC_DIR}/desktop/xdg-shell.c
         ${WESTON_SRC_DIR}/desktop/xdg-shell-v6.c
+        # libweston/shell-utils
+        ${WESTON_SRC_DIR}/shell-utils/shell-utils.c
 )
 
 target_link_libraries(
@@ -260,3 +262,24 @@ target_link_libraries(
 )
 
 set_target_properties(backend-android PROPERTIES PREFIX "")
+
+# fullscreen-shell
+add_library(
+        fullscreen-shell SHARED
+        ${WESTON_DIR}/repo/fullscreen-shell/fullscreen-shell.c
+)
+
+target_link_libraries(
+        fullscreen-shell PUBLIC
+        weston
+        wayland-protocols-fullscreen-shell-unstable-v1
+)
+
+target_include_directories(
+        fullscreen-shell PUBLIC
+        ${AUTOGEN_DIR}
+        ${WESTON_SRC_DIR}
+        ${WESTON_DIR}/repo
+)
+
+set_target_properties(fullscreen-shell PROPERTIES PREFIX "")

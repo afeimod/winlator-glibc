@@ -5,6 +5,7 @@
 #include <pixman.h>
 #include <libweston/backend-android.h>
 #include <android/native_window_jni.h>
+
 #define RENDERER_PIXMAN 0
 #define RENDERER_GL 1
 
@@ -28,6 +29,7 @@ struct WestonJni {
     struct weston_backend* backend;
     struct weston_head* head;
     struct weston_output* output;
+    struct wl_shell* shell;
     bool display_running;
 
     void (*output_create)();

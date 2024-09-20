@@ -134,6 +134,7 @@ Java_org_freedesktop_wayland_WestonJni_init(JNIEnv *env, jobject thiz, jlong ptr
     struct weston_backend* backend = NULL;
     struct weston_head* head = NULL;
     struct weston_output* output = NULL;
+    struct wl_shell* shell = NULL;
     struct wl_event_source *signals[3];
     const struct weston_windowed_output_api *api = NULL;
 
@@ -181,7 +182,7 @@ Java_org_freedesktop_wayland_WestonJni_init(JNIEnv *env, jobject thiz, jlong ptr
 
     backendConfig->base.struct_version = WESTON_ANDROID_BACKEND_CONFIG_VERSION;
     backendConfig->base.struct_size = sizeof(struct weston_android_backend_config);
-    backendConfig->refresh = westonConfig->screenRefreshRate;
+    backendConfig->refresh = westonConfig->screenRefreshRate * 1000;
 
     switch (westonConfig->rendererType) {
         case RENDERER_PIXMAN:
@@ -254,6 +255,18 @@ Java_org_freedesktop_wayland_WestonJni_init(JNIEnv *env, jobject thiz, jlong ptr
     weston_compositor_flush_heads_changed(compositor);
     weston_compositor_wake(compositor);
 
+    // load shell
+    int (*shell_init)(struct weston_compositor* ,int*, char**);
+    if (!(shell_init = weston_load_module("fullscreen-shell.so", "wet_shell_init", NULL))) {
+        ANDROID_LOG("Failed to load shell module.");
+        goto error_free;
+    }
+
+    if (shell_init(compositor, NULL, NULL)) {
+        ANDROID_LOG("Failed to init shell.");
+        goto error_free;
+    }
+
     westonJni->javaObject = thiz;
     westonJni->display = display;
     westonJni->logCtx = logCtx;
@@ -262,6 +275,7 @@ Java_org_freedesktop_wayland_WestonJni_init(JNIEnv *env, jobject thiz, jlong ptr
     westonJni->backend = backend;
     westonJni->head = head;
     westonJni->output = output;
+    westonJni->shell = shell;
 
     return JNI_TRUE;
 
