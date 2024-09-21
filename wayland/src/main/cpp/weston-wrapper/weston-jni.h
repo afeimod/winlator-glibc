@@ -39,6 +39,4 @@ struct WestonJni {
     void (*destroy)();
 };
 
-struct WestonJni* westonJniPtr = NULL;
-
 #endif //WESTON_JNI_H

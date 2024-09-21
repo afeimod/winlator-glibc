@@ -4,11 +4,11 @@
 #include "weston-jni.h"
 
 #define callJniFunction(func, ...) \
-    if (westonJniPtr != NULL) westonJniPtr->func(__VA_ARGS__)
+    if (westonJniPtr && westonJniPtr->func) westonJniPtr->func(__VA_ARGS__)
 
 #define ANDROID_LOG(msg...) __android_log_print(ANDROID_LOG_ERROR, "weston-wrapper", msg)
 
-extern struct WestonJni* westonJniPtr;
+struct WestonJni* westonJniPtr = NULL;
 
 void wrapper_notify_android_output_create() {
     ANDROID_LOG("notify android_output_create");

@@ -26,7 +26,7 @@ public class WestonActivity extends AppCompatActivity {
             public void surfaceCreated(@NonNull SurfaceHolder holder) {
                 mWeston.setRenderSurface(holder.getSurface());
                 if (firstCreated) {
-                    mWeston.setScreenSize(1280, 720);
+                    mWeston.setScreenSize(westonView.getWidth(), westonView.getHeight());
                     mWeston.setRefreshRate(60);
                     mWeston.setRenderer(WestonJni.RendererPixman);
                     if (!mWeston.initWeston()) {
@@ -39,7 +39,6 @@ public class WestonActivity extends AppCompatActivity {
 
             @Override
             public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
-
             }
 
             @Override

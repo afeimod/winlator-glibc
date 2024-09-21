@@ -52,7 +52,7 @@ set(HAVE_WEBP 0)
 set(HAVE_XWAYLAND_LISTENFD 0)
 set(BUILD_XWAYLAND 0)
 set(XSERVER_PATH 0)
-set(WESTON_SHELL_CLIENT 0)
+set(WESTON_SHELL_CLIENT " ")
 check_function_exists(mkostemp HAVE_MKOSTEMP)
 check_function_exists(strchrnul HAVE_STRCHRNUL)
 check_function_exists(initgroups HAVE_INITGROUPS)
@@ -263,6 +263,17 @@ target_link_libraries(
 
 set_target_properties(backend-android PROPERTIES PREFIX "")
 
+# frontend-android
+add_library(
+        frontend-android STATIC
+        ${WESTON_DIR}/repo/frontend/android.c
+)
+
+target_link_libraries(
+        frontend-android PUBLIC
+        weston
+)
+
 # fullscreen-shell
 add_library(
         fullscreen-shell SHARED
@@ -272,6 +283,7 @@ add_library(
 target_link_libraries(
         fullscreen-shell PUBLIC
         weston
+        frontend-android
         wayland-protocols-fullscreen-shell-unstable-v1
 )
 
@@ -283,3 +295,27 @@ target_include_directories(
 )
 
 set_target_properties(fullscreen-shell PROPERTIES PREFIX "")
+
+# desktop-shell
+add_library(
+        desktop-shell SHARED
+        ${WESTON_DIR}/repo/desktop-shell/shell.c
+        ${WESTON_DIR}/repo/desktop-shell/input-panel.c
+)
+
+target_link_libraries(
+        desktop-shell PUBLIC
+        weston
+        frontend-android
+        weston-weston-desktop-shell
+        wayland-protocols-input-method-unstable-v1
+)
+
+target_include_directories(
+        desktop-shell PUBLIC
+        ${AUTOGEN_DIR}
+        ${WESTON_SRC_DIR}
+        ${WESTON_DIR}/repo
+)
+
+set_target_properties(desktop-shell PROPERTIES PREFIX "")

@@ -3,7 +3,7 @@ project(weston-wrapper)
 
 # weston-wrapper-shared
 add_library(
-        weston-wrapper-shared STATIC
+        weston-wrapper-shared SHARED
         weston-wrapper.c
 )
 

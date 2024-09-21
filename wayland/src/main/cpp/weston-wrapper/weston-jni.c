@@ -1,6 +1,7 @@
 #include <jni.h>
 #include <string.h>
 #include <android/log.h>
+#include <libweston/libweston.h>
 #include <libweston/windowed-output-api.h>
 #include "weston-jni.h"
 
@@ -257,7 +258,7 @@ Java_org_freedesktop_wayland_WestonJni_init(JNIEnv *env, jobject thiz, jlong ptr
 
     // load shell
     int (*shell_init)(struct weston_compositor* ,int*, char**);
-    if (!(shell_init = weston_load_module("fullscreen-shell.so", "wet_shell_init", NULL))) {
+    if (!(shell_init = weston_load_module("desktop-shell.so", "wet_shell_init", NULL))) {
         ANDROID_LOG("Failed to load shell module.");
         goto error_free;
     }
@@ -266,6 +267,8 @@ Java_org_freedesktop_wayland_WestonJni_init(JNIEnv *env, jobject thiz, jlong ptr
         ANDROID_LOG("Failed to init shell.");
         goto error_free;
     }
+
+    wl_log_set_handler_server((wl_log_func_t) handle_log);
 
     westonJni->javaObject = thiz;
     westonJni->display = display;
@@ -369,16 +372,17 @@ static void handle_repaint_output_pixman(pixman_image_t* pixmanImage) {
     window = westonJniPtr->window;
     buffer = westonJniPtr->buffer;
 
+    int width = pixman_image_get_width(pixmanImage);
+    int height = pixman_image_get_height(pixmanImage);
+    int stride = pixman_image_get_stride(pixmanImage);
+    uint32_t* src = pixman_image_get_data(pixmanImage) - stride / sizeof(uint32_t);
+
     if (ANativeWindow_lock(window, westonJniPtr->buffer, NULL) == 0) {
         uint32_t* dst = (uint32_t*)buffer->bits;
-        uint32_t* src = (uint32_t*)pixman_image_get_data(pixmanImage);
 
-        int width = pixman_image_get_width(pixmanImage);
-        int height = pixman_image_get_height(pixmanImage);
-
-        for (int y = 0; y < height; ++y) {
-            memcpy(dst + y * buffer->stride / sizeof(uint32_t), src + y * width,
-                   width * sizeof(uint32_t));
+        for (int y = 0; y < height; y++) {
+            src += stride / sizeof(uint32_t);
+            memcpy(dst + y * buffer->stride, src, width * sizeof(uint32_t));
         }
 
         ANativeWindow_unlockAndPost(window);
@@ -396,7 +400,7 @@ static int handle_log(const char *fmt, va_list ap) {
     static char logBuffer[256];
     vsnprintf(logBuffer, sizeof(logBuffer), fmt, ap);
     logBuffer[255] = '\0';
-    __android_log_print(ANDROID_LOG_ERROR, "weston", "%s", logBuffer);
+    return __android_log_print(ANDROID_LOG_ERROR, "weston", "%s", logBuffer);
 }
 
 static int signal_sigterm_handler(int signal, void* data) {
