@@ -19,3 +19,6 @@
 [submodule "wayland/src/main/cpp/xkbcommon/repo"]
 	path = wayland/src/main/cpp/xkbcommon/repo
 	url = https://github.com/xkbcommon/libxkbcommon
+[submodule "wayland/src/main/cpp/cairo/repo"]
+	path = wayland/src/main/cpp/cairo/repo
+	url = https://gitlab.freedesktop.org/cairo/cairo.git
