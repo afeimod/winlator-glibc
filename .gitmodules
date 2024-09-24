@@ -22,3 +22,6 @@
 [submodule "wayland/src/main/cpp/cairo/repo"]
 	path = wayland/src/main/cpp/cairo/repo
 	url = https://gitlab.freedesktop.org/cairo/cairo.git
+[submodule "wayland/src/main/cpp/png/repo"]
+	path = wayland/src/main/cpp/png/repo
+	url = https://github.com/pnggroup/libpng.git

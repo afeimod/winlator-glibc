@@ -89,6 +89,8 @@ set(CAIRO_HAS_USER_FONT 1)
 set(CAIRO_HAS_MIME_SURFACE 1)
 set(CAIRO_HAS_RECORDING_SURFACE 1)
 set(CAIRO_HAS_OBSERVER_SURFACE 1)
+set(CAIRO_HAS_SVG_SURFACE 1)
+set(CAIRO_HAS_PNG_FUNCTIONS 1)
 configure_file(
         ${CAIRO_FEATURES_H_IN}
         ${CAIRO_FEATURES_H_DEST}
@@ -248,16 +250,23 @@ add_library(
         ${CAIRO_SRC_DIR}/cairo-tag-attributes.c
         ${CAIRO_SRC_DIR}/cairo-tag-stack.c
         ${CAIRO_SRC_DIR}/cairo-deflate-stream.c
+        # png
+        ${CAIRO_SRC_DIR}/cairo-png.c
+        # svg
+        ${CAIRO_SRC_DIR}/cairo-svg-surface.c
 )
 
 target_link_libraries(
         cairo PUBLIC
         pixman
+        png
 )
 
-target_include_directories(cairo PUBLIC ${CAIRO_SRC_DIR})
-
-target_include_directories(cairo PRIVATE ${AUTOGEN_DIR})
+target_include_directories(
+        cairo PUBLIC
+        ${CAIRO_SRC_DIR}
+        ${AUTOGEN_DIR}
+)
 
 
 

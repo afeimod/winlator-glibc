@@ -163,6 +163,28 @@ target_include_directories(
         ${AUTOGEN_DIR}
 )
 
+# cairo-shared
+add_library(
+        cairo-shared STATIC
+        ${WESTON_SHARED_DIR}/image-loader.c
+        ${WESTON_SHARED_DIR}/cairo-util.c
+        ${WESTON_SHARED_DIR}/frame.c
+)
+
+target_link_libraries(
+        cairo-shared PUBLIC
+        wayland-util
+        wayland-client
+        cairo
+        pixman
+)
+
+target_include_directories(
+        cairo-shared PUBLIC
+        ${WESTON_DIR}/repo
+        ${WESTON_DIR}/repo/include
+)
+
 # libweston
 add_library(
         weston SHARED
@@ -248,6 +270,25 @@ target_include_directories(
         ${WESTON_DIR}/repo
 )
 
+# gl-borders
+add_library(
+        gl-borders STATIC
+        ${WESTON_SRC_DIR}/gl-borders.c
+)
+
+target_link_libraries(
+        gl-borders PUBLIC
+        egl
+        cairo-shared
+        weston-public
+)
+
+target_include_directories(
+        gl-borders PUBLIC
+        ${WESTON_SRC_DIR}
+        ${WESTON_DIR}/repo
+)
+
 # backend-android
 add_library(
         backend-android SHARED
@@ -257,6 +298,7 @@ add_library(
 target_link_libraries(
         backend-android PUBLIC
         weston
+        gl-borders
         # weston-wrapper
         weston-wrapper-shared
 )
