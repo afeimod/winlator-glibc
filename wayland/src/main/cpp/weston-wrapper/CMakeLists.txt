@@ -24,6 +24,7 @@ target_include_directories(
 add_library(
         weston-jni SHARED
         weston-jni.c
+        rect.c
 )
 
 target_link_libraries(

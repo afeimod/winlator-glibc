@@ -10,17 +10,28 @@
 #define RENDERER_GL 1
 
 struct WestonConfig {
-    int screenWidth;
-    int screenHeight;
-    int screenRefreshRate;
     int rendererType;
+    int renderRefreshRate;
+    ARect screenRect;
+    ARect displayRect;
+    ARect renderRect;
+    char socketPath[64];
+
+    float outputScaleX;
+    float outputScaleY;
+    int outputStartX;
+    int outputStartY;
+    int displayWidth;
+    int displayHeight;
+    bool isScaled;
+    pixman_image_t* compositeImg;
 };
 
 struct WestonJni {
     jobject javaObject;
     ANativeWindow* window;
-    ANativeWindow_Buffer* buffer;
-    struct WestonConfig* config;
+    ANativeWindow_Buffer buffer;
+    struct WestonConfig config;
 
     struct wl_display* display;
     struct weston_log_context* logCtx;

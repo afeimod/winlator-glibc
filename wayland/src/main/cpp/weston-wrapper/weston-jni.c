@@ -4,6 +4,9 @@
 #include <libweston/libweston.h>
 #include <libweston/windowed-output-api.h>
 #include "weston-jni.h"
+#include "rect.h"
+
+#define epsilon 0.00001f
 
 #define ANDROID_LOG(msg...) __android_log_print(ANDROID_LOG_ERROR, "weston-jni", msg)
 
@@ -15,7 +18,11 @@ static int handle_log(const char*, va_list);
 //static int signal_sigchld_handler(int, void*);
 static int signal_sigterm_handler(int, void*);
 static int signal_sigusr2_handler(int, void*);
-
+static void copyRect(JNIEnv*, ARect*, jobject);
+static void copyString(JNIEnv*, char*, size_t, jstring);
+static void updateBuffersGeometry(JNIEnv*, long);
+static void updateOutputStatus(JNIEnv*, long);
+static inline void scaleOutputToDisplay(struct WestonConfig*, pixman_image_t*);
 
 static inline void throwJavaException(JNIEnv* env, const char* msg) {
     jclass runtimeExceptionClass = (*env)->FindClass(env, "java/lang/RuntimeException");
@@ -48,7 +55,6 @@ Java_org_freedesktop_wayland_WestonJni_create(JNIEnv* env, jobject thiz) {
         return 0;
     }
 
-    westonJni->config = westonConfig;
     westonJni->output_create = NULL;
     westonJni->output_destroy = NULL;
     westonJni->output_set_size = handle_output_set_size;
@@ -77,9 +83,7 @@ Java_org_freedesktop_wayland_WestonJni_destroy(JNIEnv* env, jobject thiz, jlong 
         if (westonJni->display)
             wl_display_destroy(westonJni->display);
 
-        free(westonJni->config);
         free(westonJni->backendConfig);
-        free(westonJni->buffer);
         free(westonJni);
 
         westonJniPtr = NULL;
@@ -87,16 +91,17 @@ Java_org_freedesktop_wayland_WestonJni_destroy(JNIEnv* env, jobject thiz, jlong 
 }
 
 JNIEXPORT jboolean JNICALL
-Java_org_freedesktop_wayland_WestonJni_renderSurface(JNIEnv* env, jobject thiz, jlong ptr,
+Java_org_freedesktop_wayland_WestonJni_setSurface(JNIEnv* env, jobject thiz, jlong ptr,
                                                      jobject surface) {
     ANativeWindow* window = NULL;
-    ANativeWindow_Buffer* buffer = NULL;
     struct WestonJni* westonJni = getWestonJniFromPtr(env, ptr);
 
     if (!westonJni)
         return JNI_FALSE;
 
-    if (surface == NULL) {
+    struct WestonConfig* config = &westonJni->config;
+
+    if (!surface) {
         westonJni->window = NULL;
         return JNI_TRUE;
     }
@@ -104,23 +109,42 @@ Java_org_freedesktop_wayland_WestonJni_renderSurface(JNIEnv* env, jobject thiz, 
     if (!(window = ANativeWindow_fromSurface(env, surface)))
         return JNI_FALSE;
 
-    if (!(buffer = calloc(1, sizeof(ANativeWindow_Buffer))))
-        return JNI_FALSE;
-
     westonJni->window = window;
-    westonJni->buffer = buffer;
+    updateBuffersGeometry(env, ptr);
 
     return JNI_TRUE;
 }
 
 JNIEXPORT jboolean JNICALL
-Java_org_freedesktop_wayland_WestonJni_haveSurface(JNIEnv* env, jobject thiz, jlong ptr) {
+Java_org_freedesktop_wayland_WestonJni_updateConfig(JNIEnv* env, jobject thiz, jlong ptr,
+                                                    jobject config) {
     struct WestonJni* westonJni = getWestonJniFromPtr(env, ptr);
 
-    if (!westonJni)
+    if (!westonJni || !config)
         return JNI_FALSE;
 
-    return westonJni->window ? JNI_TRUE : JNI_FALSE;
+    struct WestonConfig* westonConfig = &westonJni->config;
+    jclass objClass = (*env)->GetObjectClass(env, config);
+
+    // convert config from java to c
+    jfieldID rendererTypeFieId = (*env)->GetFieldID(env, objClass, "rendererType", "I");
+    jfieldID renderRefreshRateFieId = (*env)->GetFieldID(env, objClass, "renderRefreshRate", "I");
+    jfieldID screenRectFieId = (*env)->GetFieldID(env, objClass, "screenRect", "Landroid/graphics/Rect;");
+    jfieldID displayRectFieId = (*env)->GetFieldID(env, objClass, "displayRect", "Landroid/graphics/Rect;");
+    jfieldID renderRectFieId = (*env)->GetFieldID(env, objClass, "renderRect", "Landroid/graphics/Rect;");
+    jfieldID socketPathFieId = (*env)->GetFieldID(env, objClass, "socketPath", "Ljava/lang/String;");
+
+    westonConfig->rendererType = (*env)->GetIntField(env, config, rendererTypeFieId);
+    westonConfig->renderRefreshRate = (*env)->GetIntField(env, config, renderRefreshRateFieId);
+    copyRect(env, &westonConfig->screenRect, (*env)->GetObjectField(env, config, screenRectFieId));
+    copyRect(env, &westonConfig->displayRect, (*env)->GetObjectField(env, config, displayRectFieId));
+    copyRect(env, &westonConfig->renderRect, (*env)->GetObjectField(env, config, renderRectFieId));
+    copyString(env, westonConfig->socketPath, sizeof(westonConfig->socketPath),
+               (*env)->GetObjectField(env, config, socketPathFieId));
+
+    updateBuffersGeometry(env, ptr);
+    updateOutputStatus(env, ptr);
+    return JNI_TRUE;
 }
 
 JNIEXPORT jboolean JNICALL
@@ -139,10 +163,10 @@ Java_org_freedesktop_wayland_WestonJni_init(JNIEnv *env, jobject thiz, jlong ptr
     struct wl_event_source *signals[3];
     const struct weston_windowed_output_api *api = NULL;
 
-    if (!westonJni || !westonJni->config || westonJni->compositor)
+    if (!westonJni || westonJni->compositor)
         return JNI_FALSE;
 
-    westonConfig = westonJni->config;
+    westonConfig = &westonJni->config;
 
     // create display
     if (!(display = wl_display_create())) {
@@ -156,7 +180,7 @@ Java_org_freedesktop_wayland_WestonJni_init(JNIEnv *env, jobject thiz, jlong ptr
     signals[1] = wl_event_loop_add_signal(loop, SIGUSR2, signal_sigusr2_handler, display);
 
     // create socket
-    if (wl_display_add_socket(display, "/data/data/com.winlator/files/tmp/wayland-0")) {
+    if (wl_display_add_socket(display, westonConfig->socketPath)) {
         ANDROID_LOG("Failed to add a socket.");
         goto error_free;
     }
@@ -183,7 +207,7 @@ Java_org_freedesktop_wayland_WestonJni_init(JNIEnv *env, jobject thiz, jlong ptr
 
     backendConfig->base.struct_version = WESTON_ANDROID_BACKEND_CONFIG_VERSION;
     backendConfig->base.struct_size = sizeof(struct weston_android_backend_config);
-    backendConfig->refresh = westonConfig->screenRefreshRate * 1000;
+    backendConfig->refresh = westonConfig->renderRefreshRate * 1000;
 
     switch (westonConfig->rendererType) {
         case RENDERER_PIXMAN:
@@ -245,7 +269,8 @@ Java_org_freedesktop_wayland_WestonJni_init(JNIEnv *env, jobject thiz, jlong ptr
     output->pos.c = weston_coord(0, 0);
     weston_output_set_scale(output, 1);
     weston_output_set_transform(output, WL_OUTPUT_TRANSFORM_NORMAL);
-    api->output_set_size(output, westonConfig->screenWidth, westonConfig->screenHeight);
+    api->output_set_size(output, ARectGetWidth(&westonConfig->renderRect),
+                         ARectGetHeight(&westonConfig->renderRect));
 
     if (weston_output_enable(output)) {
         ANDROID_LOG("Failed to enable output.");
@@ -325,59 +350,31 @@ Java_org_freedesktop_wayland_WestonJni_isDisplayRunning(JNIEnv *env, jobject thi
     return westonJni->display_running;
 }
 
-JNIEXPORT jboolean JNICALL
-Java_org_freedesktop_wayland_WestonJni_setScreenSize(JNIEnv *env, jobject thiz, jlong ptr,
-                                                     jint width, jint height) {
-    struct WestonJni* westonJni = getWestonJniFromPtr(env, ptr);
-
-    if (!westonJni || !westonJni->config)
-        return JNI_FALSE;
-
-    westonJni->config->screenWidth = width;
-    westonJni->config->screenHeight = height;
-    return JNI_TRUE;
-}
-
-JNIEXPORT jboolean JNICALL
-Java_org_freedesktop_wayland_WestonJni_setRenderer(JNIEnv *env, jobject thiz, jlong ptr,
-                                                   jint renderer) {
-    struct WestonJni* westonJni = getWestonJniFromPtr(env, ptr);
-
-    if (!westonJni || !westonJni->config)
-        return JNI_FALSE;
-
-    westonJni->config->rendererType = renderer;
-    return JNI_TRUE;
-}
-
-JNIEXPORT jboolean JNICALL
-Java_org_freedesktop_wayland_WestonJni_setRefreshRate(JNIEnv *env, jobject thiz, jlong ptr,
-                                                      jint refresh_rate) {
-    struct WestonJni* westonJni = getWestonJniFromPtr(env, ptr);
-
-    if (!westonJni || !westonJni->config)
-        return JNI_FALSE;
-
-    westonJniPtr->config->screenRefreshRate = refresh_rate;
-    return JNI_TRUE;
-}
-
-static void handle_repaint_output_pixman(pixman_image_t* pixmanImage) {
+static void handle_repaint_output_pixman(pixman_image_t* srcImg) {
     ANativeWindow* window = NULL;
     ANativeWindow_Buffer* buffer = NULL;
+    pixman_image_t* dstImg = NULL;
+    struct WestonConfig* config = NULL;
 
-    if (!westonJniPtr || !westonJniPtr->window || !westonJniPtr->buffer || !pixmanImage)
+    if (!westonJniPtr || !westonJniPtr->window || !srcImg)
         return;
 
+    config = &westonJniPtr->config;
     window = westonJniPtr->window;
-    buffer = westonJniPtr->buffer;
+    buffer = &westonJniPtr->buffer;
 
-    int width = pixman_image_get_width(pixmanImage);
-    int height = pixman_image_get_height(pixmanImage);
-    int stride = pixman_image_get_stride(pixmanImage);
-    uint32_t* src = pixman_image_get_data(pixmanImage) - stride / sizeof(uint32_t);
+    if (config->isScaled) {
+        dstImg = config->compositeImg;
+        scaleOutputToDisplay(config, srcImg);
+    } else
+        dstImg = srcImg;
 
-    if (ANativeWindow_lock(window, westonJniPtr->buffer, NULL) == 0) {
+    int width = pixman_image_get_width(dstImg);
+    int height = pixman_image_get_height(dstImg);
+    int stride = pixman_image_get_stride(dstImg);
+    uint32_t* src = pixman_image_get_data(dstImg) - stride / sizeof(uint32_t);
+
+    if (ANativeWindow_lock(window, buffer, NULL) == 0) {
         uint32_t* dst = (uint32_t*)buffer->bits;
 
         for (int y = 0; y < height; y++) {
@@ -390,10 +387,7 @@ static void handle_repaint_output_pixman(pixman_image_t* pixmanImage) {
 }
 
 static void handle_output_set_size(int width, int height) {
-    if (!westonJniPtr || !westonJniPtr->window)
-        return;
 
-    ANativeWindow_setBuffersGeometry(westonJniPtr->window, width, height, WINDOW_FORMAT_RGBX_8888);
 }
 
 static int handle_log(const char *fmt, va_list ap) {
@@ -417,4 +411,95 @@ static int signal_sigusr2_handler(int signal, void* data) {
         return 1;
     }
     return 0;
+}
+
+static void copyRect(JNIEnv* env, ARect* aRect, jobject jRect) {
+    jclass rectClass = (*env)->GetObjectClass(env, jRect);
+
+    jfieldID leftField = (*env)->GetFieldID(env, rectClass, "left", "I");
+    jfieldID topField = (*env)->GetFieldID(env, rectClass, "top", "I");
+    jfieldID rightField = (*env)->GetFieldID(env, rectClass, "right", "I");
+    jfieldID bottomField = (*env)->GetFieldID(env, rectClass, "bottom", "I");
+
+    aRect->left = (*env)->GetIntField(env, jRect, leftField);
+    aRect->top = (*env)->GetIntField(env, jRect, topField);
+    aRect->right = (*env)->GetIntField(env, jRect, rightField);
+    aRect->bottom = (*env)->GetIntField(env, jRect, bottomField);
+}
+
+static void copyString(JNIEnv* env, char* dest, size_t len, jstring jString) {
+    const char* nString = (*env)->GetStringUTFChars(env, jString, 0);
+    size_t nLen = strlen(nString);
+
+    if (nLen + 1 > len)
+        return;
+
+    strncpy(dest, nString, nLen + 1);
+}
+
+static void updateBuffersGeometry(JNIEnv* env, long ptr) {
+    struct WestonJni* westonJni = getWestonJniFromPtr(env, ptr);
+
+    if (!westonJni || !westonJni->window)
+        return;
+
+    ANativeWindow_setBuffersGeometry(westonJni->window,
+                                     ARectGetWidth(&westonJni->config.screenRect),
+                                     ARectGetHeight(&westonJni->config.screenRect),
+                                     WINDOW_FORMAT_RGBX_8888);
+}
+
+static void updateOutputStatus(JNIEnv* env, long ptr) {
+    struct WestonJni* westonJni = getWestonJniFromPtr(env, ptr);
+
+    if (!westonJni)
+        return;
+
+    struct WestonConfig* config = &westonJni->config;
+    struct ARect* screenRect = &config->screenRect;
+    struct ARect* displayRect = &config->displayRect;
+    struct ARect* renderRect = &config->renderRect;
+
+    config->displayWidth = ARectGetWidth(displayRect);
+    config->displayHeight = ARectGetHeight(displayRect);
+    config->outputScaleX = (float) config->displayWidth / ARectGetWidth(renderRect);
+    config->outputScaleY = (float) config->displayHeight / ARectGetHeight(renderRect);
+    config->outputStartX = displayRect->left;
+    config->outputStartY = displayRect->top;
+    config->isScaled = !(fabsf(config->outputScaleX - 1) < epsilon && fabsf(config->outputScaleY - 1) < epsilon);
+
+    if (config->compositeImg) {
+        pixman_image_unref(config->compositeImg);
+        config->compositeImg = NULL;
+    }
+
+    if (config->isScaled) {
+        config->compositeImg = pixman_image_create_bits(
+                PIXMAN_a8r8g8b8,
+                ARectGetWidth(screenRect),
+                ARectGetHeight(screenRect),
+                NULL,
+                0);
+    }
+}
+
+static void scaleOutputToDisplay(struct WestonConfig* config, pixman_image_t* in) {
+    pixman_transform_t transform;
+    pixman_transform_init_identity(&transform);
+    pixman_transform_scale(NULL, &transform,
+                           pixman_double_to_fixed(config->outputScaleX),
+                           pixman_double_to_fixed(config->outputScaleY));
+    pixman_image_set_transform(in, &transform);
+
+    pixman_image_composite(
+            PIXMAN_OP_SRC,
+            in,
+            NULL,
+            config->compositeImg,
+            0, 0,
+            0, 0,
+            config->outputStartX, config->outputStartY,
+            config->displayWidth,
+            config->displayHeight
+    );
 }

@@ -1,5 +1,6 @@
 package org.freedesktop.wayland;
 
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.view.SurfaceHolder;
 
@@ -24,14 +25,17 @@ public class WestonActivity extends AppCompatActivity {
             private boolean firstCreated = true;
             @Override
             public void surfaceCreated(@NonNull SurfaceHolder holder) {
-                mWeston.setRenderSurface(holder.getSurface());
+                mWeston.setSurface(holder.getSurface());
                 if (firstCreated) {
-                    mWeston.setScreenSize(westonView.getWidth(), westonView.getHeight());
-                    mWeston.setRefreshRate(60);
-                    mWeston.setRenderer(WestonJni.RendererPixman);
-                    if (!mWeston.initWeston()) {
-                        throw new RuntimeException("Failed to init weston");
-                    }
+                    WestonJni.Config config = mWeston.getConfig();
+                    config.socketPath = getFilesDir().getAbsolutePath() + "/tmp/wayland-0";
+                    config.renderRefreshRate = 60;
+                    config.rendererType = WestonJni.RendererPixman;
+                    config.screenRect = new Rect(0, 0, westonView.getWidth(), westonView.getHeight());
+                    config.displayRect = new Rect(100, 50, westonView.getWidth() - 100, westonView.getHeight() - 50);
+                    config.renderRect = new Rect(0, 0, 1280, 720);
+                    mWeston.updateConfig();
+                    mWeston.init();
                     mWeston.startDisplay();
                     firstCreated = false;
                 }
@@ -43,7 +47,7 @@ public class WestonActivity extends AppCompatActivity {
 
             @Override
             public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
-                mWeston.setRenderSurface(null);
+                mWeston.setSurface(null);
             }
         });
     }

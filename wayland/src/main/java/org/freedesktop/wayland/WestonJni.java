@@ -1,5 +1,6 @@
 package org.freedesktop.wayland;
 
+import android.graphics.Rect;
 import android.view.Surface;
 
 import java.util.concurrent.Executors;
@@ -14,8 +15,8 @@ public class WestonJni {
     public static final int RendererPixman = 0;
     public static final int RendererGL = 1;
     private long nativePtr = NullPtr;
-    private boolean needInit = true;
     private Future<?> displayFuture;
+    private final Config mConfig = new Config();
 
     public long getNativePtr() {
         return nativePtr;
@@ -38,15 +39,16 @@ public class WestonJni {
         nativePtr = NullPtr;
     }
 
-    public void setRenderSurface(Surface surface) {
+    public void init() {
         if (nativePtr == NullPtr)
             throw new PtrException("NativePtr is null.");
+        init(nativePtr);
+    }
 
-        if (surface != null && haveSurface(nativePtr))
-            throw new PtrException("Have a surface already.");
-
-        if (!renderSurface(nativePtr, surface))
-            throw new RenderSurfaceException();
+    public void setSurface(Surface surface) {
+        if (nativePtr == NullPtr)
+            throw new PtrException("NativePtr is null.");
+        setSurface(nativePtr, surface);
     }
 
     public void startDisplay() {
@@ -67,42 +69,14 @@ public class WestonJni {
         displayFuture = null;
     }
 
-    public boolean initWeston() {
-        boolean ret;
-
+    public void updateConfig() {
         if (nativePtr == NullPtr)
             throw new PtrException("NativePtr is null.");
-
-        if (!needInit)
-            return false;
-
-        ret = init(nativePtr);
-        needInit = !ret;
-        return ret;
+        updateConfig(nativePtr, mConfig);
     }
 
-    public void setScreenSize(int width, int height) {
-        if (nativePtr == NullPtr)
-            throw new PtrException("NativePtr is null.");
-
-        if (!setScreenSize(nativePtr, width, height))
-            throw new DisplayException("Failed to set screen size.");
-    }
-
-    public void setRenderer(int rendererType) {
-        if (nativePtr == NullPtr)
-            throw new PtrException("NativePtr is null.");
-
-        if (!setRenderer(nativePtr, rendererType))
-            throw new DisplayException("Failed to set renderer type.");
-    }
-
-    public void setRefreshRate(int rate) {
-        if (nativePtr == NullPtr)
-            throw new PtrException("NativePtr is null.");
-
-        if (!setRefreshRate(nativePtr, rate))
-            throw new DisplayException("Failed to set refresh rate.");
+    public Config getConfig() {
+        return mConfig;
     }
 
     @Override
@@ -115,15 +89,21 @@ public class WestonJni {
         super.finalize();
     }
 
+    public static class Config {
+        public int rendererType = RendererPixman;
+        public int renderRefreshRate = 60;
+        public Rect screenRect;
+        public Rect displayRect;
+        public Rect renderRect;
+        public String socketPath = "";
+    }
+
     private native long create();
     private native void destroy(long ptr);
-    private native boolean renderSurface(long ptr, Surface surface);
-    private native boolean haveSurface(long ptr);
     private native boolean init(long ptr);
+    private native boolean setSurface(long ptr, Surface surface);
+    private native boolean updateConfig(long ptr, Config config);
     private native void displayRun(long ptr);
     private native void displayTerminate(long ptr);
     private native boolean isDisplayRunning(long ptr);
-    private native boolean setScreenSize(long ptr, int width, int height);
-    private native boolean setRenderer(long ptr, int renderer);
-    private native boolean setRefreshRate(long ptr, int refreshRate);
 }
