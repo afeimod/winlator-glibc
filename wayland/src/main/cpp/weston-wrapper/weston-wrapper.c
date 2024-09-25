@@ -33,3 +33,9 @@ void wrapper_notify_android_destroy() {
     ANDROID_LOG("notify android_destroy");
     callJniFunction(destroy);
 }
+
+void wrapper_func_touch(android_touch func) {
+    ANDROID_LOG("set func touch");
+    if (westonJniPtr)
+        westonJniPtr->func_android_touch = func;
+}

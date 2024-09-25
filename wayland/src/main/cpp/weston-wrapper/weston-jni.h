@@ -5,6 +5,7 @@
 #include <pixman.h>
 #include <libweston/backend-android.h>
 #include <android/native_window_jni.h>
+#include "input_ops.h"
 
 #define RENDERER_PIXMAN 0
 #define RENDERER_GL 1
@@ -48,6 +49,8 @@ struct WestonJni {
     void (*output_set_size)(int, int);
     void (*repaint_output_pixman)(pixman_image_t*);
     void (*destroy)();
+
+    android_touch func_android_touch;
 };
 
 #endif //WESTON_JNI_H

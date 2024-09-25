@@ -1,6 +1,9 @@
 package org.freedesktop.wayland;
 
+import static org.freedesktop.wayland.WlTouch.*;
+
 import android.graphics.Rect;
+import android.view.MotionEvent;
 import android.view.Surface;
 
 import java.util.concurrent.Executors;
@@ -79,6 +82,24 @@ public class WestonJni {
         return mConfig;
     }
 
+    public void onTouch(MotionEvent event) {
+        if (nativePtr == NullPtr)
+            return;
+
+        int touchType = switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN->WL_TOUCH_DOWN;
+            case MotionEvent.ACTION_MOVE->WL_TOUCH_MOTION;
+            case MotionEvent.ACTION_UP->WL_TOUCH_UP;
+            case MotionEvent.ACTION_CANCEL->WL_TOUCH_CANCEL;
+            default -> -1;
+        };
+
+        if (touchType == -1)
+            return;
+
+        performTouch(nativePtr, event.getPointerId(event.getActionIndex()), touchType, event.getX(), event.getY());
+    }
+
     @Override
     protected void finalize() throws Throwable {
         if (nativePtr != NullPtr) {
@@ -106,4 +127,5 @@ public class WestonJni {
     private native void displayRun(long ptr);
     private native void displayTerminate(long ptr);
     private native boolean isDisplayRunning(long ptr);
+    private native void performTouch(long ptr, int touchId, int touchType, float x, float y);
 }

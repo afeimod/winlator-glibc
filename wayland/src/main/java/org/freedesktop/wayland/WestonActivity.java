@@ -1,8 +1,11 @@
 package org.freedesktop.wayland;
 
+import android.annotation.SuppressLint;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
+import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -12,6 +15,7 @@ public class WestonActivity extends AppCompatActivity {
     private WestonJni mWeston;
     private WestonView westonView;
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,8 +36,8 @@ public class WestonActivity extends AppCompatActivity {
                     config.renderRefreshRate = 60;
                     config.rendererType = WestonJni.RendererPixman;
                     config.screenRect = new Rect(0, 0, westonView.getWidth(), westonView.getHeight());
-                    config.displayRect = new Rect(100, 50, westonView.getWidth() - 100, westonView.getHeight() - 50);
-                    config.renderRect = new Rect(0, 0, 1280, 720);
+                    config.displayRect = new Rect(0, 0, westonView.getWidth(), westonView.getHeight());
+                    config.renderRect = new Rect(0, 0, westonView.getWidth(), westonView.getHeight());
                     mWeston.updateConfig();
                     mWeston.init();
                     mWeston.startDisplay();
@@ -49,6 +53,11 @@ public class WestonActivity extends AppCompatActivity {
             public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
                 mWeston.setSurface(null);
             }
+        });
+
+        westonView.setOnTouchListener((v, event) -> {
+            mWeston.onTouch(event);
+            return true;
         });
     }
 

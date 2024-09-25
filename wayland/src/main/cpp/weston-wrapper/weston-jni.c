@@ -162,6 +162,7 @@ Java_org_freedesktop_wayland_WestonJni_init(JNIEnv *env, jobject thiz, jlong ptr
     struct wl_shell* shell = NULL;
     struct wl_event_source *signals[3];
     const struct weston_windowed_output_api *api = NULL;
+    struct xkb_rule_names xkb_names;
 
     if (!westonJni || westonJni->compositor)
         return JNI_FALSE;
@@ -196,6 +197,13 @@ Java_org_freedesktop_wayland_WestonJni_init(JNIEnv *env, jobject thiz, jlong ptr
     // create compositor
     if(!(compositor = weston_compositor_create(display, logCtx, NULL, NULL))) {
         ANDROID_LOG("Failed to create compositor.");
+        goto error_free;
+    }
+
+    setenv("XDG_CONFIG_HOME", "/data/data/com.winlator/files/xdg", 1);
+    // create xkb
+    if (weston_compositor_set_xkb_rule_names(compositor, &xkb_names)) {
+        ANDROID_LOG("Failed to create xkb rules.");
         goto error_free;
     }
 
@@ -348,6 +356,18 @@ Java_org_freedesktop_wayland_WestonJni_isDisplayRunning(JNIEnv *env, jobject thi
         return JNI_FALSE;
 
     return westonJni->display_running;
+}
+
+JNIEXPORT void JNICALL
+Java_org_freedesktop_wayland_WestonJni_performTouch(JNIEnv *env, jobject thiz, jlong ptr,
+                                                    jint touch_id, jint touch_type, jfloat x,
+                                                    jfloat y) {
+    struct WestonJni* westonJni = getWestonJniFromPtr(env, ptr);
+
+    if (!westonJni || !westonJni->func_android_touch)
+        return;
+
+    westonJni->func_android_touch(westonJni->backend, touch_id, touch_type, x, y);
 }
 
 static void handle_repaint_output_pixman(pixman_image_t* srcImg) {
