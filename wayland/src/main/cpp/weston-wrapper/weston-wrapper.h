@@ -20,4 +20,6 @@ EXPORT void wrapper_notify_android_destroy(void* jni);
 
 EXPORT void wrapper_func_touch(void* jni, android_touch func);
 
+EXPORT void wrapper_func_key(void* jni, android_keyboard func);
+
 #endif //WESTON_WRAPPER_H

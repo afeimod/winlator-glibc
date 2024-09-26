@@ -82,22 +82,18 @@ public class WestonJni {
         return mConfig;
     }
 
-    public void onTouch(MotionEvent event) {
+    public void performTouch(int touchId, int touchType, float x, float y) {
         if (nativePtr == NullPtr)
             return;
 
-        int touchType = switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN->WL_TOUCH_DOWN;
-            case MotionEvent.ACTION_MOVE->WL_TOUCH_MOTION;
-            case MotionEvent.ACTION_UP->WL_TOUCH_UP;
-            case MotionEvent.ACTION_CANCEL->WL_TOUCH_CANCEL;
-            default -> -1;
-        };
+        performTouch(nativePtr, touchId, touchType, x, y);
+    }
 
-        if (touchType == -1)
+    public void performKey(int key, int keyState) {
+        if (nativePtr == NullPtr)
             return;
 
-        performTouch(nativePtr, event.getPointerId(event.getActionIndex()), touchType, event.getX(), event.getY());
+        performKey(nativePtr, key, keyState);
     }
 
     @Override
@@ -116,7 +112,9 @@ public class WestonJni {
         public Rect screenRect;
         public Rect displayRect;
         public Rect renderRect;
-        public String socketPath = "";
+        public String socketPath;
+        public String xdgConfigPath;
+        public String xdgRuntimePath;
     }
 
     private native long create();
@@ -128,4 +126,5 @@ public class WestonJni {
     private native void displayTerminate(long ptr);
     private native boolean isDisplayRunning(long ptr);
     private native void performTouch(long ptr, int touchId, int touchType, float x, float y);
+    private native void performKey(long ptr, int key, int keyState);
 }

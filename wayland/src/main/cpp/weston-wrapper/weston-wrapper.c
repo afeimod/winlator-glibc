@@ -6,7 +6,7 @@
 #define callJniFunction(jni, func, ...) \
     if (jni && ((struct WestonJni*)jni)->func) ((struct WestonJni*)jni)->func(__VA_ARGS__)
 
-#define ANDROID_LOG(msg...) __android_log_print(ANDROID_LOG_ERROR, "weston-wrapper", msg)
+#define ANDROID_LOG(msg...) __android_log_print(ANDROID_LOG_DEBUG, "weston-wrapper", msg)
 
 void wrapper_notify_android_output_create(void* jni) {
     ANDROID_LOG("notify android_output_create");
@@ -36,4 +36,10 @@ void wrapper_func_touch(void* jni, android_touch func) {
     ANDROID_LOG("set func touch");
     if (jni)
         ((struct WestonJni*)jni)->func_android_touch = func;
+}
+
+void wrapper_func_key(void* jni, android_keyboard func) {
+    ANDROID_LOG("set func key");
+    if (jni)
+        ((struct WestonJni*)jni)->func_android_keyboard = func;
 }

@@ -16,7 +16,9 @@ struct WestonConfig {
     ARect screenRect;
     ARect displayRect;
     ARect renderRect;
-    char socketPath[64];
+    char socketPath[PATH_MAX];
+    char xdgConfigPath[PATH_MAX];
+    char xdgRuntimePath[PATH_MAX];
 
     float outputScaleX;
     float outputScaleY;
@@ -51,6 +53,7 @@ struct WestonJni {
     void (*destroy)(struct WestonJni*);
 
     android_touch func_android_touch;
+    android_keyboard func_android_keyboard;
 };
 
 #endif //WESTON_JNI_H

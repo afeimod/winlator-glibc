@@ -1,11 +1,12 @@
 package org.freedesktop.wayland;
 
+import static org.freedesktop.wayland.WlTouch.*;
+
 import android.annotation.SuppressLint;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
-import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -32,7 +33,10 @@ public class WestonActivity extends AppCompatActivity {
                 mWeston.setSurface(holder.getSurface());
                 if (firstCreated) {
                     WestonJni.Config config = mWeston.getConfig();
-                    config.socketPath = getFilesDir().getAbsolutePath() + "/tmp/wayland-0";
+                    String filesPath = getFilesDir().getAbsolutePath();
+                    config.socketPath = filesPath + "/tmp/wayland-0";
+                    config.xdgConfigPath = filesPath + "/xdg";
+                    config.xdgRuntimePath = filesPath + "/tmp";
                     config.renderRefreshRate = 60;
                     config.rendererType = WestonJni.RendererPixman;
                     config.screenRect = new Rect(0, 0, westonView.getWidth(), westonView.getHeight());
@@ -56,7 +60,18 @@ public class WestonActivity extends AppCompatActivity {
         });
 
         westonView.setOnTouchListener((v, event) -> {
-            mWeston.onTouch(event);
+            int touchType = switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN->WL_TOUCH_DOWN;
+                case MotionEvent.ACTION_MOVE->WL_TOUCH_MOTION;
+                case MotionEvent.ACTION_UP->WL_TOUCH_UP;
+                case MotionEvent.ACTION_CANCEL->WL_TOUCH_CANCEL;
+                default -> -1;
+            };
+
+            if (touchType == -1)
+                return false;
+
+            mWeston.performTouch(event.getPointerId(event.getActionIndex()), touchType, event.getX(), event.getY());
             return true;
         });
     }

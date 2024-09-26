@@ -13,6 +13,7 @@
 static void handle_repaint_output_pixman(struct WestonJni*, pixman_image_t*);
 static void handle_output_set_size(struct WestonJni*, int, int);
 static int handle_log(const char*, va_list);
+static void handle_xdg_log(struct xkb_context*, enum xkb_log_level, const char*, va_list);
 //static int signal_sigchld_handler(int, void*);
 static int signal_sigterm_handler(int, void*);
 static int signal_sigusr2_handler(int, void*);
@@ -20,6 +21,7 @@ static void copyRect(JNIEnv*, ARect*, jobject);
 static void copyString(JNIEnv*, char*, size_t, jstring);
 static void updateBuffersGeometry(JNIEnv*, long);
 static void updateOutputStatus(JNIEnv*, long);
+static void updateEnvVars(struct WestonConfig*);
 static inline void scaleOutputToDisplay(struct WestonConfig*, pixman_image_t*);
 
 static inline void throwJavaException(JNIEnv* env, const char* msg) {
@@ -118,6 +120,8 @@ Java_org_freedesktop_wayland_WestonJni_updateConfig(JNIEnv* env, jobject thiz, j
     jfieldID displayRectFieId = (*env)->GetFieldID(env, objClass, "displayRect", "Landroid/graphics/Rect;");
     jfieldID renderRectFieId = (*env)->GetFieldID(env, objClass, "renderRect", "Landroid/graphics/Rect;");
     jfieldID socketPathFieId = (*env)->GetFieldID(env, objClass, "socketPath", "Ljava/lang/String;");
+    jfieldID xdgConfigPathFieId = (*env)->GetFieldID(env, objClass, "xdgConfigPath", "Ljava/lang/String;");
+    jfieldID xdgRuntimePathFieId = (*env)->GetFieldID(env, objClass, "xdgRuntimePath", "Ljava/lang/String;");
 
     westonConfig->rendererType = (*env)->GetIntField(env, config, rendererTypeFieId);
     westonConfig->renderRefreshRate = (*env)->GetIntField(env, config, renderRefreshRateFieId);
@@ -126,9 +130,14 @@ Java_org_freedesktop_wayland_WestonJni_updateConfig(JNIEnv* env, jobject thiz, j
     copyRect(env, &westonConfig->renderRect, (*env)->GetObjectField(env, config, renderRectFieId));
     copyString(env, westonConfig->socketPath, sizeof(westonConfig->socketPath),
                (*env)->GetObjectField(env, config, socketPathFieId));
+    copyString(env, westonConfig->xdgConfigPath, sizeof(westonConfig->xdgConfigPath),
+               (*env)->GetObjectField(env, config, xdgConfigPathFieId));
+    copyString(env, westonConfig->xdgRuntimePath, sizeof(westonConfig->xdgRuntimePath),
+               (*env)->GetObjectField(env, config, xdgRuntimePathFieId));
 
     updateBuffersGeometry(env, ptr);
     updateOutputStatus(env, ptr);
+    updateEnvVars(westonConfig);
     return JNI_TRUE;
 }
 
@@ -185,12 +194,13 @@ Java_org_freedesktop_wayland_WestonJni_init(JNIEnv *env, jobject thiz, jlong ptr
         goto error_free;
     }
 
-    setenv("XDG_CONFIG_HOME", "/data/data/com.winlator/files/xdg", 1);
     // create xkb
     if (weston_compositor_set_xkb_rule_names(compositor, &xkb_names)) {
         ANDROID_LOG("Failed to create xkb rules.");
         goto error_free;
     }
+
+    xkb_context_set_log_fn(compositor->xkb_context, handle_xdg_log);
 
     // create config
     if (!(backendConfig = calloc(1, sizeof(struct weston_android_backend_config)))) {
@@ -356,6 +366,17 @@ Java_org_freedesktop_wayland_WestonJni_performTouch(JNIEnv *env, jobject thiz, j
     westonJni->func_android_touch(westonJni->backend, touch_id, touch_type, x, y);
 }
 
+JNIEXPORT void JNICALL
+Java_org_freedesktop_wayland_WestonJni_performKey(JNIEnv *env, jobject thiz, jlong ptr, jint key,
+                                                  jint key_state) {
+    struct WestonJni* westonJni = getWestonJniFromPtr(env, ptr);
+
+    if (!westonJni || !westonJni->func_android_touch)
+        return;
+
+    westonJni->func_android_keyboard(westonJni->backend, key, key_state);
+}
+
 static void handle_repaint_output_pixman(struct WestonJni* westonJni, pixman_image_t* srcImg) {
     ANativeWindow* window = NULL;
     ANativeWindow_Buffer* buffer = NULL;
@@ -400,7 +421,11 @@ static int handle_log(const char *fmt, va_list ap) {
     static char logBuffer[256];
     vsnprintf(logBuffer, sizeof(logBuffer), fmt, ap);
     logBuffer[255] = '\0';
-    return __android_log_print(ANDROID_LOG_ERROR, "weston", "%s", logBuffer);
+    return __android_log_print(ANDROID_LOG_DEBUG, "weston", "%s", logBuffer);
+}
+
+static void handle_xdg_log(struct xkb_context* ctx, enum xkb_log_level level, const char* fmt, va_list args) {
+    handle_log(fmt, args);
 }
 
 static int signal_sigterm_handler(int signal, void* data) {
@@ -490,6 +515,11 @@ static void updateOutputStatus(JNIEnv* env, long ptr) {
                 NULL,
                 0);
     }
+}
+
+static void updateEnvVars(struct WestonConfig* config) {
+    setenv("XDG_CONFIG_HOME", config->xdgConfigPath, 1);
+    setenv("XDG_RUNTIME_DIR", config->xdgRuntimePath, 1);
 }
 
 static void scaleOutputToDisplay(struct WestonConfig* config, pixman_image_t* in) {
