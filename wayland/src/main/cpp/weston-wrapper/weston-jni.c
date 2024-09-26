@@ -10,10 +10,8 @@
 
 #define ANDROID_LOG(msg...) __android_log_print(ANDROID_LOG_ERROR, "weston-jni", msg)
 
-extern struct WestonJni* westonJniPtr;
-
-static void handle_repaint_output_pixman(pixman_image_t*);
-static void handle_output_set_size(int, int);
+static void handle_repaint_output_pixman(struct WestonJni*, pixman_image_t*);
+static void handle_output_set_size(struct WestonJni*, int, int);
 static int handle_log(const char*, va_list);
 //static int signal_sigchld_handler(int, void*);
 static int signal_sigterm_handler(int, void*);
@@ -33,35 +31,26 @@ static inline void throwJavaException(JNIEnv* env, const char* msg) {
 }
 
 static inline struct WestonJni* getWestonJniFromPtr(JNIEnv* env, jlong ptr) {
-    if ((jlong) westonJniPtr != ptr)
-        throwJavaException(env, "Another westonJniPtr is handled or not called create().");
+    if (!ptr) {
+        throwJavaException(env, "Not called create() yet.");
+        return NULL;
+    }
     return (struct WestonJni*) ptr;
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_freedesktop_wayland_WestonJni_create(JNIEnv* env, jobject thiz) {
     struct WestonJni* westonJni;
-    struct WestonConfig* westonConfig;
 
-    if (westonJniPtr)
-        throwJavaException(env, "Only one westonJni should be created.");
+    if (!(westonJni = calloc(1, sizeof(struct WestonJni))))
+        return (jlong) NULL;
 
-    if (!(westonJni = calloc(1, sizeof(struct WestonJni)))) {
-        return 0;
-    }
-
-    if (!(westonConfig = calloc(1, sizeof(struct WestonConfig)))) {
-        free(westonJni);
-        return 0;
-    }
-
+    westonJni->javaObject = thiz;
     westonJni->output_create = NULL;
     westonJni->output_destroy = NULL;
     westonJni->output_set_size = handle_output_set_size;
     westonJni->repaint_output_pixman = handle_repaint_output_pixman;
     westonJni->destroy = NULL;
-
-    westonJniPtr = westonJni;
 
     return (jlong) westonJni;
 }
@@ -85,8 +74,6 @@ Java_org_freedesktop_wayland_WestonJni_destroy(JNIEnv* env, jobject thiz, jlong 
 
         free(westonJni->backendConfig);
         free(westonJni);
-
-        westonJniPtr = NULL;
     }
 }
 
@@ -98,8 +85,6 @@ Java_org_freedesktop_wayland_WestonJni_setSurface(JNIEnv* env, jobject thiz, jlo
 
     if (!westonJni)
         return JNI_FALSE;
-
-    struct WestonConfig* config = &westonJni->config;
 
     if (!surface) {
         westonJni->window = NULL;
@@ -216,6 +201,7 @@ Java_org_freedesktop_wayland_WestonJni_init(JNIEnv *env, jobject thiz, jlong ptr
     backendConfig->base.struct_version = WESTON_ANDROID_BACKEND_CONFIG_VERSION;
     backendConfig->base.struct_size = sizeof(struct weston_android_backend_config);
     backendConfig->refresh = westonConfig->renderRefreshRate * 1000;
+    backendConfig->jni = westonJni;
 
     switch (westonConfig->rendererType) {
         case RENDERER_PIXMAN:
@@ -370,18 +356,18 @@ Java_org_freedesktop_wayland_WestonJni_performTouch(JNIEnv *env, jobject thiz, j
     westonJni->func_android_touch(westonJni->backend, touch_id, touch_type, x, y);
 }
 
-static void handle_repaint_output_pixman(pixman_image_t* srcImg) {
+static void handle_repaint_output_pixman(struct WestonJni* westonJni, pixman_image_t* srcImg) {
     ANativeWindow* window = NULL;
     ANativeWindow_Buffer* buffer = NULL;
     pixman_image_t* dstImg = NULL;
     struct WestonConfig* config = NULL;
 
-    if (!westonJniPtr || !westonJniPtr->window || !srcImg)
+    if (!westonJni || !westonJni->window || !srcImg)
         return;
 
-    config = &westonJniPtr->config;
-    window = westonJniPtr->window;
-    buffer = &westonJniPtr->buffer;
+    config = &westonJni->config;
+    window = westonJni->window;
+    buffer = &westonJni->buffer;
 
     if (config->isScaled) {
         dstImg = config->compositeImg;
@@ -406,7 +392,7 @@ static void handle_repaint_output_pixman(pixman_image_t* srcImg) {
     }
 }
 
-static void handle_output_set_size(int width, int height) {
+static void handle_output_set_size(struct WestonJni* westonJni, int width, int height) {
 
 }
 
@@ -452,9 +438,12 @@ static void copyString(JNIEnv* env, char* dest, size_t len, jstring jString) {
     size_t nLen = strlen(nString);
 
     if (nLen + 1 > len)
-        return;
+        goto free;
 
     strncpy(dest, nString, nLen + 1);
+
+free:
+    (*env)->ReleaseStringUTFChars(env, jString, nString);
 }
 
 static void updateBuffersGeometry(JNIEnv* env, long ptr) {

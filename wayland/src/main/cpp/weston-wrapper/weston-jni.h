@@ -44,11 +44,11 @@ struct WestonJni {
     struct wl_shell* shell;
     bool display_running;
 
-    void (*output_create)();
-    void (*output_destroy)();
-    void (*output_set_size)(int, int);
-    void (*repaint_output_pixman)(pixman_image_t*);
-    void (*destroy)();
+    void (*output_create)(struct WestonJni*);
+    void (*output_destroy)(struct WestonJni*);
+    void (*output_set_size)(struct WestonJni*, int, int);
+    void (*repaint_output_pixman)(struct WestonJni*, pixman_image_t*);
+    void (*destroy)(struct WestonJni*);
 
     android_touch func_android_touch;
 };
