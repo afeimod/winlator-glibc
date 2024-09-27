@@ -93,7 +93,7 @@ public class WindowMaterial extends ShaderMaterial {
                 "float step = (max(gray, saturation) + 0.1) * vUV.y;\n" +
                 "\n" +
                 "//the fake reflection is just a watered copy of the frame moved slightly lower\n" +
-                "vec3 reflection = texture2D(texture, vUV + vec2(rndx, rndy - min(vUV.y, 0.25)) * step).rgb;\n" +
+                "vec3 reflection = texture2D(texture, vUV + vec2(rndx, rndy - min(vUV.y, 1.0)) * step).rgb;\n" +
                 "\n" +
                 "//apply parameters and mix the colors\n" +
                 "reflection *= 4.0 * (1.0 - gray) * fx_reflection;\n" +

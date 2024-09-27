@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -348,6 +349,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             xServerView.onResume();
             environment.onResume();
         }
+        xServerView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
     }
 
     @Override
@@ -436,6 +438,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 drawerLayout.closeDrawers();
                 break;
             case R.id.main_menu_screen_effect:
+                xServerView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
                 (new ScreenFxDialog(this)).show();
                 drawerLayout.closeDrawers();
                 break;
