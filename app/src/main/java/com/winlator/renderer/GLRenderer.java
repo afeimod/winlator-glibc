@@ -40,6 +40,7 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
     public final ViewTransformation viewTransformation = new ViewTransformation();
     private final Drawable rootCursorDrawable;
     private final ArrayList<RenderableWindow> renderableWindows = new ArrayList<>();
+    private ScreenFxModel screenFxModel = ScreenFxModel.getInstance();
     private String forceFullscreenWMClass = null;
     private boolean fullscreen = false;
     private boolean toggleFullscreen = false;
@@ -57,6 +58,7 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
         this.xServerView = xServerView;
         this.xServer = xServer;
         rootCursorDrawable = createRootCursorDrawable();
+        screenFxModel.load(xServerView.getContext());
 
         quadVertices.put(new float[]{
             0.0f, 0.0f,
@@ -237,12 +239,12 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
 
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture.getTextureId());
-            GLES20.glUniform1f(material.getUniformLocation("fx_brightness"), 1.0f);
-            GLES20.glUniform1f(material.getUniformLocation("fx_contrast"), 1.0f);
-            GLES20.glUniform1f(material.getUniformLocation("fx_fxaa"), 1.0f);
-            GLES20.glUniform1f(material.getUniformLocation("fx_gamma"), 1.0f);
-            GLES20.glUniform1f(material.getUniformLocation("fx_reflection"), 0.5f);
-            GLES20.glUniform1f(material.getUniformLocation("fx_saturation"), 0.5f);
+            GLES20.glUniform1f(material.getUniformLocation("fx_brightness"), screenFxModel.brightness);
+            GLES20.glUniform1f(material.getUniformLocation("fx_contrast"), screenFxModel.contrast);
+            GLES20.glUniform1f(material.getUniformLocation("fx_fxaa"), screenFxModel.antialiasing ? 1 : 0);
+            GLES20.glUniform1f(material.getUniformLocation("fx_gamma"), screenFxModel.gamma);
+            GLES20.glUniform1f(material.getUniformLocation("fx_reflection"), screenFxModel.reflection);
+            GLES20.glUniform1f(material.getUniformLocation("fx_saturation"), screenFxModel.saturation);
             GLES20.glUniform1i(material.getUniformLocation("texture"), 0);
             GLES20.glUniform1fv(material.getUniformLocation("xform"), tmpXForm1.length, tmpXForm1, 0);
             GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, quadVertices.count());
