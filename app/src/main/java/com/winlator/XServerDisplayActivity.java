@@ -60,6 +60,7 @@ import com.winlator.math.Mathf;
 import com.winlator.midi.MidiHandler;
 import com.winlator.midi.MidiManager;
 import com.winlator.renderer.GLRenderer;
+import com.winlator.renderer.ScreenFxDialog;
 import com.winlator.widget.FrameRating;
 import com.winlator.widget.InputControlsView;
 import com.winlator.widget.MagnifierView;
@@ -432,6 +433,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                     });
                     container.addView(magnifierView);
                 }
+                drawerLayout.closeDrawers();
+                break;
+            case R.id.main_menu_screen_effect:
+                (new ScreenFxDialog(this)).show();
                 drawerLayout.closeDrawers();
                 break;
             case R.id.main_menu_logs:
