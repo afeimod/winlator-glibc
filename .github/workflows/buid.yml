@@ -41,7 +41,7 @@ jobs:
       run: |
         rm -rf app/src/main/assets/imagefs.txz 
         wget -P app/src/main/assets \
-        https://github.com/afeimod/winlator-glibc/releases/download/obb/imagefs.txz
+        https://github.com/longjunyu2/winlator/raw/refs/heads/main/app/src/main/assets/imagefs.txz
 
     - name: 7. 构建
       run: chmod +x ./gradlew && ./gradlew assembleDebug
