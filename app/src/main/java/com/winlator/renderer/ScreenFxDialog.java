@@ -10,7 +10,7 @@ import com.winlator.XServerDisplayActivity;
 import com.winlator.contentdialog.ContentDialog;
 
 public class ScreenFxDialog extends ContentDialog implements SeekBar.OnSeekBarChangeListener {
-    private ScreenFxModel model = ScreenFxModel.getInstance();
+    private final ScreenFxModel model = ScreenFxModel.getInstance();
 
     public ScreenFxDialog(XServerDisplayActivity activity) {
         super(activity, R.layout.screen_effect_dialog);
@@ -60,7 +60,7 @@ public class ScreenFxDialog extends ContentDialog implements SeekBar.OnSeekBarCh
     @SuppressLint("NonConstantResourceId")
     @Override
     public void onProgressChanged(SeekBar seekBar, int value, boolean b) {
-        switch (seekBar.getLabelFor()) {
+        switch (seekBar.getId()) {
             case R.id.SBBrightness:
                 model.brightness = value * 0.01f;
                 break;

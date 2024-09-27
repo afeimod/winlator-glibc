@@ -48,7 +48,7 @@ public class WindowMaterial extends ShaderMaterial {
         return
             "if (abs(fx_saturation - 1.0) > 0.0)\n" +
                 "color.rgb = vec3(mix(vec3(dot(color.rgb, vec3(0.299, 0.587, 0.114))), color.rgb, fx_saturation));\n" +
-            "if ((abs(fx_brightness - 1.0) > 0.0) && (abs(fx_contrast - 1.0) > 0.0))\n" +
+            "if ((abs(fx_brightness - 1.0) > 0.0) || (abs(fx_contrast - 1.0) > 0.0))\n" +
                 "color.rgb = (color.rgb-0.5)*fx_contrast+0.5+fx_brightness-1.0;\n" +
             "if (abs(fx_gamma - 1.0) > 0.0)\n" +
                "color.rgb = pow(color.rgb, vec3(1.0/fx_gamma));\n";

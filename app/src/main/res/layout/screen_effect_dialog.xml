@@ -23,8 +23,8 @@
                 android:id="@+id/SBBrightness"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:min="0"
-                android:max="200"/>
+                android:min="50"
+                android:max="150"/>
 
             <TextView
                 android:layout_width="match_parent"
@@ -34,8 +34,8 @@
                 android:id="@+id/SBContrast"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:min="0"
-                android:max="200"/>
+                android:min="50"
+                android:max="150"/>
 
             <TextView
                 android:layout_width="match_parent"
@@ -45,8 +45,8 @@
                 android:id="@+id/SBGamma"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:min="0"
-                android:max="200"/>
+                android:min="50"
+                android:max="150"/>
 
             <TextView
                 android:layout_width="match_parent"
