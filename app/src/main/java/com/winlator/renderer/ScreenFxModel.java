@@ -10,6 +10,7 @@ public class ScreenFxModel {
     private static ScreenFxModel instance;
 
     public boolean antialiasing;
+    public float bloom;
     public float brightness;
     public float contrast;
     public float gamma;
@@ -26,6 +27,7 @@ public class ScreenFxModel {
     public void load(Context context) {
         SharedPreferences pref =  PreferenceManager.getDefaultSharedPreferences(context);
         antialiasing = pref.getBoolean("fx_antialiasing", false);
+        bloom = pref.getFloat("fx_bloom", 0);
         brightness = pref.getFloat("fx_brightness", 1);
         contrast = pref.getFloat("fx_contrast", 1);
         gamma = pref.getFloat("fx_gamma", 1);
@@ -35,6 +37,7 @@ public class ScreenFxModel {
 
     public void reset(Context context) {
         antialiasing = false;
+        bloom = 0;
         brightness = 1;
         contrast = 1;
         gamma = 1;
@@ -46,6 +49,7 @@ public class ScreenFxModel {
     public void save(Context context) {
         SharedPreferences.Editor editor =  PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putBoolean("fx_antialiasing", antialiasing);
+        editor.putFloat("fx_bloom", bloom);
         editor.putFloat("fx_brightness", brightness);
         editor.putFloat("fx_contrast", contrast);
         editor.putFloat("fx_gamma", gamma);

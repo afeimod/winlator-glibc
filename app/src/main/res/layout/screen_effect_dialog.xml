@@ -77,6 +77,17 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="@string/bloom"/>
+            <SeekBar
+                android:id="@+id/SBBloom"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:min="0"
+                android:max="50"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:text="@string/reflection"/>
             <SeekBar
                 android:id="@+id/SBReflection"

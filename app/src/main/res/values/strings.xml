@@ -342,6 +342,7 @@
     <string name="screen_effect">Screen effect</string>
     <string name="reset">Reset</string>
     <string name="antialiasing">Antialiasing</string>
+    <string name="bloom">Bloom</string>
     <string name="brightness">Brightness</string>
     <string name="contrast">Contrast</string>
     <string name="gamma">Gamma</string>

@@ -36,6 +36,10 @@ public class ScreenFxDialog extends ContentDialog implements SeekBar.OnSeekBarCh
         CBAntialiasing.setChecked(model.antialiasing);
         CBAntialiasing.setOnCheckedChangeListener((compoundButton, value) -> model.antialiasing = value);
 
+        SeekBar SBBloom = findViewById(R.id.SBBloom);
+        SBBloom.setProgress((int) (model.bloom * 100));
+        SBBloom.setOnSeekBarChangeListener(this);
+
         SeekBar SBBrightness = findViewById(R.id.SBBrightness);
         SBBrightness.setProgress((int) (model.brightness * 100));
         SBBrightness.setOnSeekBarChangeListener(this);
@@ -61,6 +65,9 @@ public class ScreenFxDialog extends ContentDialog implements SeekBar.OnSeekBarCh
     @Override
     public void onProgressChanged(SeekBar seekBar, int value, boolean b) {
         switch (seekBar.getId()) {
+            case R.id.SBBloom:
+                model.bloom = value * 0.01f;
+                break;
             case R.id.SBBrightness:
                 model.brightness = value * 0.01f;
                 break;

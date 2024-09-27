@@ -239,6 +239,7 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
 
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture.getTextureId());
+            GLES20.glUniform1f(material.getUniformLocation("fx_bloom"), screenFxModel.bloom);
             GLES20.glUniform1f(material.getUniformLocation("fx_brightness"), screenFxModel.brightness);
             GLES20.glUniform1f(material.getUniformLocation("fx_contrast"), screenFxModel.contrast);
             GLES20.glUniform1f(material.getUniformLocation("fx_fxaa"), screenFxModel.antialiasing ? 1 : 0);

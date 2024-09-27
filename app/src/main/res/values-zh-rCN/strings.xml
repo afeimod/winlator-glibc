@@ -289,6 +289,7 @@
     <string name="screen_effect">屏幕效果</string>
     <string name="reset">重置</string>
     <string name="antialiasing">抗锯齿</string>
+    <string name="bloom">盛开</string>
     <string name="brightness">亮度</string>
     <string name="contrast">对比</string>
     <string name="gamma">伽马</string>

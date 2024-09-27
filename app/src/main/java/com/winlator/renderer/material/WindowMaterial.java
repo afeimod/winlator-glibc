@@ -2,7 +2,7 @@ package com.winlator.renderer.material;
 
 public class WindowMaterial extends ShaderMaterial {
     public WindowMaterial() {
-        setUniformNames("xform", "viewSize", "texture", "fx_brightness", "fx_contrast", "fx_fxaa", "fx_gamma", "fx_reflection", "fx_saturation");
+        setUniformNames("xform", "viewSize", "texture", "fx_bloom", "fx_brightness", "fx_contrast", "fx_fxaa", "fx_gamma", "fx_reflection", "fx_saturation");
     }
 
     @Override
@@ -28,6 +28,7 @@ public class WindowMaterial extends ShaderMaterial {
 
             "uniform sampler2D texture;\n" +
             "uniform vec2 viewSize;\n" +
+            "uniform float fx_bloom;\n" +
             "uniform float fx_brightness;\n" +
             "uniform float fx_contrast;\n" +
             "uniform float fx_fxaa;\n" +
@@ -38,10 +39,37 @@ public class WindowMaterial extends ShaderMaterial {
 
             "void main() {\n" +
                 "vec4 color = vec4(texture2D(texture, vUV).rgb, 1.0);\n" +
-                getFXAA() + getFastReflections() + getColorCorrection() +
+                "float gray = (color.r + color.g + color.b) / 3.0;\n" +
+                "float saturation = (abs(color.r - gray) + abs(color.g - gray) + abs(color.b - gray)) / 3.0;\n" +
+                getFXAA() + getBloom() + getFastReflections() + getColorCorrection() +
                 "gl_FragColor = color;\n" +
             "}"
         ;
+    }
+
+    private String getBloom() {
+        return
+            "if (fx_bloom > 0.0) {\n" +
+                "//show the effect mainly on bright parts of the screen\n" +
+                "float step = 0.001 * gray / max(saturation, 0.25) * fx_bloom;\n" +
+                "\n" +
+                "//sum the neightbor pixels\n" +
+                "vec3 sum = vec3(0.0);\n" +
+                "for (int x = -3; x <= 3; x += 2)\n" +
+                "{\n" +
+                    "for (int y = -3; y <= 3; y += 2)\n" +
+                    "{\n" +
+                        "vec3 pixel = texture2D(texture, vUV + vec2(x, y)*step).xyz;\n" +
+                        "float g = (pixel.r + pixel.g + pixel.b) / 3.0;\n" +
+                        "float s = (abs(pixel.r - gray) + abs(pixel.g - gray) + abs(pixel.b - gray)) / 3.0;\n" +
+                        "sum += pixel * g * g / max(s, 0.25);\n" +
+                    "}\n" +
+                "}\n" +
+                "sum /= 16.0;\n" +
+                "\n" +
+                "//mix the color\n" +
+                "color.rgb += sum * fx_bloom;\n" +
+            "}\n";
     }
 
     private String getColorCorrection() {
@@ -57,10 +85,6 @@ public class WindowMaterial extends ShaderMaterial {
     private String getFastReflections() {
         return
             "if (fx_reflection > 0.0) {\n" +
-                "//get the pixel color\n" +
-                "float gray = (color.r + color.g + color.b) / 3.0;\n" +
-                "float saturation = (abs(color.r - gray) + abs(color.g - gray) + abs(color.b - gray)) / 3.0;\n" +
-                "\n" +
                 "//persistent random offset to hide that the reflection is wrong\n" +
                 "float rndx = mod(vUV.x + gray, 0.03) + mod(vUV.y + saturation, 0.05);\n" +
                 "float rndy = mod(vUV.y + saturation, 0.03) + mod(vUV.x + gray, 0.05);\n" +
