@@ -99,6 +99,7 @@ public class ContainersFragment extends Fragment {
 
         private class ViewHolder extends RecyclerView.ViewHolder {
             private final ImageButton menuButton;
+            private final ImageButton runButton;
             private final ImageView imageView;
             private final TextView title;
 
@@ -107,6 +108,7 @@ public class ContainersFragment extends Fragment {
                 this.imageView = view.findViewById(R.id.ImageView);
                 this.title = view.findViewById(R.id.TVTitle);
                 this.menuButton = view.findViewById(R.id.BTMenu);
+                this.runButton = view.findViewById(R.id.BTRun);
             }
         }
 
@@ -122,6 +124,7 @@ public class ContainersFragment extends Fragment {
         @Override
         public void onViewRecycled(@NonNull ViewHolder holder) {
             holder.menuButton.setOnClickListener(null);
+            holder.runButton.setOnClickListener(null);
             super.onViewRecycled(holder);
         }
 
@@ -131,11 +134,21 @@ public class ContainersFragment extends Fragment {
             holder.imageView.setImageResource(R.drawable.icon_container);
             holder.title.setText(item.getName());
             holder.menuButton.setOnClickListener((view) -> showListItemMenu(view, item));
+            holder.runButton.setOnClickListener((view) -> runContainer(item));
         }
 
         @Override
         public final int getItemCount() {
             return data.size();
+        }
+
+        private void runContainer(Container container) {
+            if (!XrActivity.isSupported()) {
+                Intent intent = new Intent(getContext(), XServerDisplayActivity.class);
+                intent.putExtra("container_id", container.id);
+                requireActivity().startActivity(intent);
+            }
+            else XrActivity.openIntent(getActivity(), container.id, null);
         }
 
         private void showListItemMenu(View anchorView, Container container) {
@@ -147,12 +160,7 @@ public class ContainersFragment extends Fragment {
             listItemMenu.setOnMenuItemClickListener((menuItem) -> {
                 switch (menuItem.getItemId()) {
                     case R.id.container_run:
-                        if (!XrActivity.isSupported()) {
-                            Intent intent = new Intent(context, XServerDisplayActivity.class);
-                            intent.putExtra("container_id", container.id);
-                            requireActivity().startActivity(intent);
-                        }
-                        else XrActivity.openIntent(getActivity(), container.id, null);
+                        runContainer(container);
                         break;
                     case R.id.container_edit:
                         FragmentManager fragmentManager = getParentFragmentManager();
