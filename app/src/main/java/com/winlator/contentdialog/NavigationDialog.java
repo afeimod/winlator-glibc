@@ -23,7 +23,7 @@ public class NavigationDialog extends ContentDialog {
     public NavigationDialog(@NonNull XServerDisplayActivity context) {
         super(context, R.layout.navigation_dialog);
         setIcon(R.drawable.icon_container);
-        setTitle(context.getString(R.string.container));
+        setTitle(context.getString(R.string.app_name));
         findViewById(R.id.BTCancel).setVisibility(View.GONE);
 
         GridLayout grid = findViewById(R.id.main_menu_grid);
