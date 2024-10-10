@@ -56,6 +56,9 @@ struct WestonJni {
 
     android_touch func_android_touch;
     android_keyboard func_android_keyboard;
+    android_pointer func_android_pointer;
+    android_button func_android_button;
+    android_axis func_android_axis;
 };
 
 #endif //WESTON_JNI_H

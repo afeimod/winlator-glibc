@@ -380,10 +380,44 @@ Java_org_freedesktop_wayland_WestonJni_performKey(JNIEnv *env, jobject thiz, jlo
                                                   jint key_state) {
     struct WestonJni* westonJni = getWestonJniFromPtr(env, ptr);
 
-    if (!westonJni || !westonJni->func_android_touch)
+    if (!westonJni || !westonJni->func_android_keyboard)
         return;
 
     westonJni->func_android_keyboard(westonJni->backend, key, key_state);
+}
+
+JNIEXPORT void JNICALL
+Java_org_freedesktop_wayland_WestonJni_performPointer(JNIEnv *env, jobject thiz, jlong ptr,
+                                                      jint pointer_type, jfloat x, jfloat y) {
+    struct WestonJni* westonJni = getWestonJniFromPtr(env, ptr);
+
+    if (!westonJni || !westonJni->func_android_pointer)
+        return;
+
+    westonJni->func_android_pointer(westonJni->backend, pointer_type, x, y);
+}
+
+JNIEXPORT void JNICALL
+Java_org_freedesktop_wayland_WestonJni_performButton(JNIEnv *env, jobject thiz, jlong ptr,
+                                                     jint button, jint button_state) {
+    struct WestonJni* westonJni = getWestonJniFromPtr(env, ptr);
+
+    if (!westonJni || !westonJni->func_android_button)
+        return;
+
+    westonJni->func_android_button(westonJni->backend, button, button_state);
+}
+
+JNIEXPORT void JNICALL
+Java_org_freedesktop_wayland_WestonJni_performAxis(JNIEnv *env, jobject thiz, jlong ptr,
+                                                   jint axis_type, jfloat value,
+                                                   jboolean has_discrete, jint discrete) {
+    struct WestonJni* westonJni = getWestonJniFromPtr(env, ptr);
+
+    if (!westonJni || !westonJni->func_android_axis)
+        return;
+
+    westonJni->func_android_axis(westonJni->backend, axis_type, value, has_discrete, discrete);
 }
 
 static void handle_repaint_output_pixman(struct WestonJni* westonJni, pixman_image_t* srcImg) {

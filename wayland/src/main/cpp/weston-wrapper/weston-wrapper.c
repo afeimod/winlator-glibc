@@ -44,6 +44,24 @@ void wrapper_func_key(void* jni, android_keyboard func) {
         ((struct WestonJni*)jni)->func_android_keyboard = func;
 }
 
+void wrapper_func_pointer(void* jni, android_pointer func) {
+    ANDROID_LOG("set func pointer");
+    if (jni)
+        ((struct WestonJni*)jni)->func_android_pointer = func;
+}
+
+void wrapper_func_button(void* jni, android_button func) {
+    ANDROID_LOG("set func button");
+    if (jni)
+        ((struct WestonJni*)jni)->func_android_button = func;
+}
+
+void wrapper_func_axis(void* jni, android_axis func) {
+    ANDROID_LOG("set func axis");
+    if (jni)
+        ((struct WestonJni*)jni)->func_android_axis = func;
+}
+
 bool update_xkb_rules(void* jni, const char** rule, const char** model, const char** layout) {
     ANDROID_LOG("update xkb rules");
 

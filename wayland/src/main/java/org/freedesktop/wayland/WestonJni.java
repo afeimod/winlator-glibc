@@ -96,6 +96,27 @@ public class WestonJni {
         performKey(nativePtr, key, keyState);
     }
 
+    public void performPointer(int pointerType, float x, float y) {
+        if (nativePtr == NullPtr)
+            return;
+
+        performPointer(nativePtr, pointerType, x, y);
+    }
+
+    public void performButton(int button, int buttonState) {
+        if (nativePtr == NullPtr)
+            return;
+
+        performButton(nativePtr, button, buttonState);
+    }
+
+    public void performAxis(int axisType, float value, boolean hasDiscrete, int discrete) {
+        if (nativePtr == NullPtr)
+            return;
+
+        performAxis(nativePtr, axisType, value, hasDiscrete, discrete);
+    }
+
     @Override
     protected void finalize() throws Throwable {
         if (nativePtr != NullPtr) {
@@ -130,4 +151,7 @@ public class WestonJni {
     private native boolean isDisplayRunning(long ptr);
     private native void performTouch(long ptr, int touchId, int touchType, float x, float y);
     private native void performKey(long ptr, int key, int keyState);
+    private native void performPointer(long ptr, int pointerType, float x, float y);
+    private native void performButton(long ptr, int button, int buttonState);
+    private native void performAxis(long ptr, int axisType, float value, boolean hasDiscrete, int discrete);
 }
