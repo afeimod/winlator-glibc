@@ -115,6 +115,9 @@ public class WestonJni {
         public String socketPath;
         public String xdgConfigPath;
         public String xdgRuntimePath;
+        public String xkbRule = "evdev";
+        public String xkbModel = "pc105";
+        public String xkbLayout = "us";
     }
 
     private native long create();

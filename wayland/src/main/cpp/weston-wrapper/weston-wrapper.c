@@ -43,3 +43,17 @@ void wrapper_func_key(void* jni, android_keyboard func) {
     if (jni)
         ((struct WestonJni*)jni)->func_android_keyboard = func;
 }
+
+bool update_xkb_rules(void* jni, const char** rule, const char** model, const char** layout) {
+    ANDROID_LOG("update xkb rules");
+
+    if (jni) {
+        char (*rules)[XKB_STR_MAX]= ((struct WestonJni*) jni)->config.xkbRules;
+        *rule = (char*) rules[0];
+        *model = (char*) rules[1];
+        *layout = (char*) rules[2];
+        return true;
+    }
+
+    return false;
+}

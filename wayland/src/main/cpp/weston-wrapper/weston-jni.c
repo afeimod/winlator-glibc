@@ -122,6 +122,9 @@ Java_org_freedesktop_wayland_WestonJni_updateConfig(JNIEnv* env, jobject thiz, j
     jfieldID socketPathFieId = (*env)->GetFieldID(env, objClass, "socketPath", "Ljava/lang/String;");
     jfieldID xdgConfigPathFieId = (*env)->GetFieldID(env, objClass, "xdgConfigPath", "Ljava/lang/String;");
     jfieldID xdgRuntimePathFieId = (*env)->GetFieldID(env, objClass, "xdgRuntimePath", "Ljava/lang/String;");
+    jfieldID xkbRuleFieId = (*env)->GetFieldID(env, objClass, "xkbRule", "Ljava/lang/String;");
+    jfieldID xkbModelFieId = (*env)->GetFieldID(env, objClass, "xkbModel", "Ljava/lang/String;");
+    jfieldID xkbLayoutFieId = (*env)->GetFieldID(env, objClass, "xkbLayout", "Ljava/lang/String;");
 
     westonConfig->rendererType = (*env)->GetIntField(env, config, rendererTypeFieId);
     westonConfig->renderRefreshRate = (*env)->GetIntField(env, config, renderRefreshRateFieId);
@@ -134,6 +137,12 @@ Java_org_freedesktop_wayland_WestonJni_updateConfig(JNIEnv* env, jobject thiz, j
                (*env)->GetObjectField(env, config, xdgConfigPathFieId));
     copyString(env, westonConfig->xdgRuntimePath, sizeof(westonConfig->xdgRuntimePath),
                (*env)->GetObjectField(env, config, xdgRuntimePathFieId));
+    copyString(env, westonConfig->xkbRules[0], XKB_STR_MAX,
+               (*env)->GetObjectField(env, config, xkbRuleFieId));
+    copyString(env, westonConfig->xkbRules[1], XKB_STR_MAX,
+               (*env)->GetObjectField(env, config, xkbModelFieId));
+    copyString(env, westonConfig->xkbRules[2], XKB_STR_MAX,
+               (*env)->GetObjectField(env, config, xkbLayoutFieId));
 
     updateBuffersGeometry(env, ptr);
     updateOutputStatus(env, ptr);

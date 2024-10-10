@@ -22,4 +22,6 @@ EXPORT void wrapper_func_touch(void* jni, android_touch func);
 
 EXPORT void wrapper_func_key(void* jni, android_keyboard func);
 
+EXPORT bool update_xkb_rules(void* jni, const char** rule, const char** model, const char** layout);
+
 #endif //WESTON_WRAPPER_H

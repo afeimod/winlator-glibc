@@ -9,6 +9,7 @@
 
 #define RENDERER_PIXMAN 0
 #define RENDERER_GL 1
+#define XKB_STR_MAX 16
 
 struct WestonConfig {
     int rendererType;
@@ -19,6 +20,7 @@ struct WestonConfig {
     char socketPath[PATH_MAX];
     char xdgConfigPath[PATH_MAX];
     char xdgRuntimePath[PATH_MAX];
+    char xkbRules[3][XKB_STR_MAX];
 
     float outputScaleX;
     float outputScaleY;
