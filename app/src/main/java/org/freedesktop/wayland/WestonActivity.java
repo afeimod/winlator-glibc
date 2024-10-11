@@ -12,6 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.winlator.R;
+
 public class WestonActivity extends AppCompatActivity {
     private WestonJni mWeston;
     private WestonView westonView;
@@ -20,7 +22,7 @@ public class WestonActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.weston_avtivity_layout);
+        setContentView(R.layout.weston_activity_layout);
         westonView = findViewById(R.id.westonView);
 
         mWeston = new WestonJni();

@@ -1,33 +1,23 @@
 cmake_minimum_required(VERSION 3.22.1)
 
-Project(Winlator)
+set(CMAKE_BUILD_TYPE Release)
+set(SCRIPTS_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/scripts/bin)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wno-unused-function -Wimplicit-function-declaration")
+include(scripts/utils.cmake)
+include(scripts/wayland-scanner.cmake)
 
+add_subdirectory(ffi)
+add_subdirectory(pixman)
+add_subdirectory(wayland)
+add_subdirectory(wayland-protocols)
+add_subdirectory(xkbcommon)
+add_subdirectory(png)
+add_subdirectory(cairo)
+add_subdirectory(weston)
+add_subdirectory(weston-wrapper)
 add_subdirectory(virglrenderer)
 add_subdirectory(OpenXR-SDK)
 add_subdirectory(patchelf)
-
-add_library(winlator SHARED
-            xr/engine.c
-            xr/framebuffer.c
-            xr/input.c
-            xr/main.c
-            xr/math.c
-            xr/renderer.c
-            winlator/drawable.c
-            winlator/gpu_image.c
-            winlator/sysvshared_memory.c
-            winlator/xconnector_epoll.c
-            winlator/alsa_client.c
-            winlator/patchelf_wrapper.cpp)
-
-target_link_libraries(winlator
-                      log
-                      android
-                      jnigraphics
-                      openxr_loader
-                      aaudio
-                      EGL
-                      GLESv2
-                      GLESv3)
+#add_subdirectory(fluidsynth)
+add_subdirectory(pcre2)
+add_subdirectory(winlator)

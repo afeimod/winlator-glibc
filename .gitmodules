@@ -2,26 +2,26 @@
 	path = app/src/main/cpp/OpenXR-SDK
 	url = https://github.com/KhronosGroup/OpenXR-SDK.git
 [submodule "wayland/src/main/cpp/wayland/repo"]
-	path = wayland/src/main/cpp/wayland/repo
+	path = app/src/main/cpp/wayland/repo
 	url = https://gitlab.freedesktop.org/wayland/wayland.git
 [submodule "wayland/src/main/cpp/ffi/repo"]
-	path = wayland/src/main/cpp/ffi/repo
+	path = app/src/main/cpp/ffi/repo
 	url = https://github.com/libffi/libffi.git
 [submodule "wayland/src/main/cpp/pixman/repo"]
-	path = wayland/src/main/cpp/pixman/repo
+	path = app/src/main/cpp/pixman/repo
 	url = https://gitlab.freedesktop.org/pixman/pixman.git
 [submodule "wayland/src/main/cpp/weston/repo"]
-	path = wayland/src/main/cpp/weston/repo
+	path = app/src/main/cpp/weston/repo
 	url = https://github.com/longjunyu2/weston.git
 [submodule "wayland/src/main/cpp/wayland-protocols/repo"]
-	path = wayland/src/main/cpp/wayland-protocols/repo
+	path = app/src/main/cpp/wayland-protocols/repo
 	url = https://gitlab.freedesktop.org/wayland/wayland-protocols.git
 [submodule "wayland/src/main/cpp/xkbcommon/repo"]
-	path = wayland/src/main/cpp/xkbcommon/repo
+	path = app/src/main/cpp/xkbcommon/repo
 	url = https://github.com/xkbcommon/libxkbcommon
 [submodule "wayland/src/main/cpp/cairo/repo"]
-	path = wayland/src/main/cpp/cairo/repo
+	path = app/src/main/cpp/cairo/repo
 	url = https://gitlab.freedesktop.org/cairo/cairo.git
 [submodule "wayland/src/main/cpp/png/repo"]
-	path = wayland/src/main/cpp/png/repo
+	path = app/src/main/cpp/png/repo
 	url = https://github.com/pnggroup/libpng.git
