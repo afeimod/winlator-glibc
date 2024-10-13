@@ -25,3 +25,12 @@
 [submodule "wayland/src/main/cpp/png/repo"]
 	path = app/src/main/cpp/png/repo
 	url = https://github.com/pnggroup/libpng.git
+[submodule "app/src/main/cpp/fluidsynth/repo"]
+	path = app/src/main/cpp/fluidsynth/repo
+	url = https://github.com/FluidSynth/fluidsynth.git
+[submodule "app/src/main/cpp/glib/repo"]
+	path = app/src/main/cpp/glib/repo
+	url = https://gitlab.gnome.org/GNOME/glib.git
+[submodule "app/src/main/cpp/pcre2/repo"]
+	path = app/src/main/cpp/pcre2/repo
+	url = https://github.com/PCRE2Project/pcre2.git
