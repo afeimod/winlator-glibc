@@ -9,10 +9,10 @@ set(PNG_SRC_DIR ${PNG_DIR}/repo)
 set(AUTOGEN_DIR ${PNG_DIR}/autogen)
 
 set(CONFIG_H_IN ${PNG_DIR}/config.h.in)
-set(CONFIG_H_DEST ${AUTOGEN_DIR}/config.h)
+set(CONFIG_H_DEST ${AUTOGEN_DIR}/config/config.h)
 
 set(PNGLIBCONF_H_PREBUILT ${PNG_SRC_DIR}/scripts/pnglibconf.h.prebuilt)
-set(PNGLIBCONF_H_DEST ${AUTOGEN_DIR}/pnglibconf.h)
+set(PNGLIBCONF_H_DEST ${AUTOGEN_DIR}/include/pnglibconf.h)
 
 include(CheckFunctionExists)
 include(CheckIncludeFile)
@@ -28,7 +28,7 @@ check_repo(${PNG_DIR}/repo)
 # Only aarch64
 aarch64_only()
 
-# Generate config.h
+# Check
 set(LT_OBJDIR "./libs")
 set(PACKAGE ${PNG_PACKAGE})
 set(PACKAGE_BUGREPORT "png-mng-implement@lists.sourceforge.net")
@@ -56,6 +56,12 @@ check_function_exists("feenableexcept" HAVE_FEENABLEEXCEPT)
 check_function_exists("pow" HAVE_POW)
 check_linker_flag(C "-lm" HAVE_LIBM)
 check_linker_flag(C "-lz" HAVE_LIBZ)
+
+file(MAKE_DIRECTORY ${AUTOGEN_DIR})
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/config)
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/include)
+
+# Generate config.h
 configure_file(
         ${CONFIG_H_IN}
         ${CONFIG_H_DEST}
@@ -68,6 +74,8 @@ configure_file(
         ${PNGLIBCONF_H_DEST}
         COPYONLY
 )
+
+# Patch pnglibconf.h
 file(READ ${PNGLIBCONF_H_DEST} FILE_CONTENT)
 string(REPLACE "\n" ";" FILE_LINES "${FILE_CONTENT}")
 list(REMOVE_AT FILE_LINES -2)
@@ -77,6 +85,18 @@ file(WRITE ${PNGLIBCONF_H_DEST} "")
 foreach(LINE IN LISTS FILE_LINES)
     file(APPEND ${PNGLIBCONF_H_DEST} "${LINE}\n")
 endforeach()
+
+set(PNG_HEADERS
+        ${PNG_SRC_DIR}/png.h
+        ${PNG_SRC_DIR}/pngconf.h
+)
+foreach (HEADER_FILE IN LISTS PNG_HEADERS)
+    configure_file(
+            ${HEADER_FILE}
+            ${AUTOGEN_DIR}/include
+            COPYONLY
+    )
+endforeach ()
 
 # C args
 add_compile_options(
@@ -106,6 +126,18 @@ add_library(
         ${PNG_SRC_DIR}/pngwutil.c
 )
 
-target_link_libraries(png PUBLIC z)
+target_link_libraries(
+        png PUBLIC
+        z
+)
 
-target_include_directories(png PUBLIC ${PNG_SRC_DIR} ${AUTOGEN_DIR})
+target_include_directories(
+        png PUBLIC
+        ${AUTOGEN_DIR}/include
+)
+
+target_include_directories(
+        png PRIVATE
+        ${PNG_SRC_DIR}
+        ${AUTOGEN_DIR}/config
+)

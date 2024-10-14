@@ -3,13 +3,13 @@ project(weston-wrapper)
 
 # weston-wrapper-shared
 add_library(
-        weston-wrapper-shared SHARED
+        weston-wrapper-shared STATIC
         weston-wrapper.c
 )
 
 target_link_libraries(
         weston-wrapper-shared PUBLIC
-        weston-public
+        weston
         pixman
         android
         log

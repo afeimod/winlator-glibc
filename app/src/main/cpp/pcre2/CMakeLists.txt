@@ -42,14 +42,14 @@ set(ORIG_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
 set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -Werror")
 check_c_source_compiles("
     #include <stddef.h>
-    int main(void) { int a,b; size_t m; __builtin_mul_overflow(a,b,&m); return 0; }
+    int main(int argc, char** argv) { int a,b; size_t m; __builtin_mul_overflow(a,b,&m); return 0; }
 " HAVE_BUILTIN_MUL_OVERFLOW)
 check_c_source_compiles("
-    int main(void) { char buf[128] __attribute__((uninitialized)); (void)buf; return 0; }
+    int main(int argc, char** argv) { char buf[128] __attribute__((uninitialized)); (void)buf; return 0; }
 " HAVE_ATTRIBUTE_UNINITIALIZED)
 check_c_source_compiles([=[
   extern __attribute__ ((visibility ("default"))) int f(void);
-  int main(void) { return f(); }
+  int main(int argc, char** argv) { return f(); }
   int f(void) { return 42; }
   ]=] HAVE_VISIBILITY
 )

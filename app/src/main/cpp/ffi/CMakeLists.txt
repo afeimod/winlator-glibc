@@ -11,10 +11,10 @@ set(FFI_INCLUDE_DIR ${FFI_DIR}/repo/include)
 set(AUTOGEN_DIR ${FFI_DIR}/autogen)
 
 set(FFICONFIG_H_IN ${FFI_DIR}/fficonfig.h.in)
-set(FFICONFIG_H_DEST ${AUTOGEN_DIR}/fficonfig.h)
+set(FFICONFIG_H_DEST ${AUTOGEN_DIR}/config/fficonfig.h)
 
 set(FFI_H_IN ${FFI_INCLUDE_DIR}/ffi.h.in)
-set(FFI_H_DEST ${AUTOGEN_DIR}/ffi.h)
+set(FFI_H_DEST ${AUTOGEN_DIR}/include/ffi.h)
 
 include(CheckFunctionExists)
 include(CheckIncludeFile)
@@ -29,7 +29,7 @@ check_repo(${FFI_DIR}/repo)
 # Only aarch64
 aarch64_only()
 
-# Generate fficonfig.h
+# Check
 set(EH_FRAME_FLAGS "a")
 set(HAVE_LONG_DOUBLE 1)
 set(HAVE_RO_EH_FRAME 1)
@@ -81,6 +81,9 @@ check_c_source_compiles("
 check_c_source_compiles("
     __attribute__((visibility(\"hidden\"))) void test_hidden_visibility(void);
     void test_hidden_visibility(void) {}
+    int main(int argc, char** argv) {
+        return 0;
+    }
 " HAVE_HIDDEN_VISIBILITY_ATTRIBUTE)
 check_c_source_compiles("
     .section .text
@@ -97,11 +100,27 @@ check_c_source_compiles("
 check_c_source_compiles("
     #include <features.h>
     #if defined(__GNUC__) && defined(_GNU_SOURCE) && defined(__VERSION__)
-        int main() { return 0; }
+        int main(int argc, char** argv) { return 0; }
     #else
         #error GNU symbol versioning is not supported
     #endif
 " LIBFFI_GNU_SYMBOL_VERSIONING)
+
+set(TARGET "AARCH64")
+set(FFI_EXEC_TRAMPOLINE_TABLE 0)
+check_c_source_compiles("
+        int main(int argc, char** argv) {
+            long double ld = 1.0;
+            int size = sizeof(ld);
+            return 0;
+        }
+" HAVE_LONG_DOUBLE)
+
+file(MAKE_DIRECTORY ${AUTOGEN_DIR})
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/include)
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/config)
+
+# Generate fficonfig.h
 configure_file(
         ${FFICONFIG_H_IN}
         ${FFICONFIG_H_DEST}
@@ -109,19 +128,17 @@ configure_file(
 )
 
 # Generate ffi.h
-set(TARGET "AARCH64")
-set(FFI_EXEC_TRAMPOLINE_TABLE 0)
-check_c_source_compiles("
-        int main() {
-            long double ld = 1.0;
-            int size = sizeof(ld);
-            return 0;
-        }
-" HAVE_LONG_DOUBLE)
 configure_file(
         ${FFI_H_IN}
         ${FFI_H_DEST}
         @ONLY
+)
+
+# Install ffitarget.h
+configure_file(
+        ${FFI_SRC_DIR}/aarch64/ffitarget.h
+        ${AUTOGEN_DIR}/include/
+        COPYONLY
 )
 
 # C args
@@ -131,6 +148,7 @@ add_compile_options(
         -fstrict-aliasing
         -ffast-math
         -fexceptions
+        -Wno-deprecated-declarations
 )
 
 # libffi
@@ -147,6 +165,14 @@ add_library(
         ${FFI_SRC_DIR}/aarch64/sysv.S
 )
 
-target_include_directories(ffi PUBLIC ${AUTOGEN_DIR} ${FFI_SRC_DIR}/aarch64)
+target_include_directories(
+        ffi PUBLIC
+        ${AUTOGEN_DIR}/include
+)
 
-target_include_directories(ffi PRIVATE ${FFI_INCLUDE_DIR})
+target_include_directories(
+        ffi PRIVATE
+        ${AUTOGEN_DIR}/config
+        ${FFI_SRC_DIR}/aarch64
+        ${FFI_INCLUDE_DIR}
+)

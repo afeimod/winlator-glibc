@@ -10,17 +10,16 @@ set(WAYLAND_PROTOCOL_DIR ${WAYLAND_DIR}/repo/protocol)
 set(WAYLAND_CURSOR_DIR ${WAYLAND_DIR}/repo/cursor)
 set(WAYLAND_EGL_DIR ${WAYLAND_DIR}/repo/egl)
 set(AUTOGEN_DIR ${WAYLAND_DIR}/autogen)
-set(TMP_DIR ${AUTOGEN_DIR}/tmp)
 set(PROTOCOL_INSTALL_DIR ${WAYLAND_DIR}/protocol)
 
 set(CONFIG_H_IN ${WAYLAND_DIR}/config.h.in)
-set(CONFIG_H_DEST ${AUTOGEN_DIR}/config.h)
+set(CONFIG_H_DEST ${AUTOGEN_DIR}/config/config.h)
 
 set(VERSION_H_IN ${WAYLAND_SRC_DIR}/wayland-version.h.in)
-set(VERSION_H_DEST ${AUTOGEN_DIR}/wayland-version.h)
+set(VERSION_H_DEST ${AUTOGEN_DIR}/include/wayland-version.h)
 
 set(WAYLAND_OS_C ${WAYLAND_SRC_DIR}/wayland-os.c)
-set(WAYLAND_OS_C_TMP ${TMP_DIR}/wayland-os.c)
+set(WAYLAND_OS_C_TMP ${AUTOGEN_DIR}/src/wayland-os.c)
 
 include(CheckFunctionExists)
 include(CheckIncludeFile)
@@ -43,8 +42,7 @@ wayland_scanner("-c" "client-header" "${PROTOCOL_WAYLAND_XML}"
 wayland_scanner("-s" "public-code" "${PROTOCOL_WAYLAND_XML}"
         "${PROTOCOL_INSTALL_DIR}/wayland-protocol.c")
 
-# Generate config.h
-file(MAKE_DIRECTORY ${AUTOGEN_DIR})
+# Check
 check_function_exists(accept4 HAVE_ACCEPT4)
 check_function_exists(memfd_create HAVE_MEMFD_CREATE)
 check_function_exists(mkostemp HAVE_MKOSTEMP)
@@ -56,7 +54,7 @@ check_include_file("sys/prctl.h" HAVE_SYS_PRCTL_H)
 check_include_file("sys/procctl.h" HAVE_PROCCTL_H)
 check_include_file("sys/ucred.h" HAVE_SYS_UCRED_H)
 check_struct_has_member("struct xucred" "cr_pid" "sys/ucred.h" XUCRED_CR_PID_PRESENT LANGUAGE C)
-if (DEFINED XUCRED_CR_PID_PRESENT)
+if (XUCRED_CR_PID_PRESENT)
     set(HAVE_XUCRED_CR_PID 1)
 else ()
     set(HAVE_XUCRED_CR_PID 0)
@@ -64,6 +62,13 @@ endif ()
 set(HAVE_BROKEN_MSG_CMSG_CLOEXEC "0")
 set(PACKAGE ${WAYLAND_PACKAGE})
 set(PACKAGE_VERSION ${WAYLAND_VERSION})
+
+file(MAKE_DIRECTORY ${AUTOGEN_DIR})
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/config)
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/include)
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/src)
+
+# Generate config.h
 configure_file(
         ${CONFIG_H_IN}
         ${CONFIG_H_DEST}
@@ -81,6 +86,39 @@ configure_file(
         @ONLY
 )
 
+# Generate wayland-os.c
+configure_file(
+        ${WAYLAND_OS_C}
+        ${WAYLAND_OS_C_TMP}
+        COPYONLY
+)
+
+# Install headers
+set(WAYLAND_HEADERS
+        ${WAYLAND_SRC_DIR}/wayland-util.h
+        ${WAYLAND_SRC_DIR}/wayland-server.h
+        ${WAYLAND_SRC_DIR}/wayland-server-core.h
+        ${WAYLAND_SRC_DIR}/wayland-client.h
+        ${WAYLAND_SRC_DIR}/wayland-client-core.h
+        ${WAYLAND_CURSOR_DIR}/wayland-cursor.h
+        ${WAYLAND_EGL_DIR}/wayland-egl.h
+)
+foreach (HEADER_FILE IN LISTS WAYLAND_HEADERS)
+    configure_file(
+            ${HEADER_FILE}
+            ${AUTOGEN_DIR}/include
+            COPYONLY
+    )
+endforeach ()
+
+# Install config.h to autogen
+# since wayland-os.c include it by "#include ../config.h"
+configure_file(
+        ${CONFIG_H_DEST}
+        ${AUTOGEN_DIR}
+        COPYONLY
+)
+
 # C args
 add_compile_options(
         -O2
@@ -93,12 +131,20 @@ add_compile_options(
 )
 
 # wayland-protocol-core
-add_library(wayland-protocol-core STATIC ${PROTOCOL_INSTALL_DIR}/wayland-protocol.c)
+add_library(
+        wayland-protocol-core STATIC
+        ${PROTOCOL_INSTALL_DIR}/wayland-protocol.c
+)
 
 target_include_directories(
         wayland-protocol-core PUBLIC
+        ${AUTOGEN_DIR}/include
         ${PROTOCOL_INSTALL_DIR}
-        ${WAYLAND_SRC_DIR}
+)
+
+target_include_directories(
+        wayland-protocol-core PRIVATE
+        ${AUTOGEN_DIR}/config
 )
 
 # wayland-util
@@ -107,15 +153,17 @@ add_library(
         ${WAYLAND_SRC_DIR}/wayland-util.c
 )
 
-target_include_directories(wayland-util PUBLIC ${WAYLAND_SRC_DIR})
-
-# wayland-private
-configure_file(
-        ${WAYLAND_OS_C}
-        ${WAYLAND_OS_C_TMP}
-        COPYONLY
+target_include_directories(
+        wayland-util PUBLIC
+        ${AUTOGEN_DIR}/include
 )
 
+target_include_directories(
+        wayland-util PRIVATE
+        ${AUTOGEN_DIR}/config
+)
+
+# wayland-private
 add_library(
         wayland-private STATIC
         ${WAYLAND_SRC_DIR}/connection.c
@@ -127,7 +175,16 @@ target_link_libraries(
         ffi
 )
 
-target_include_directories(wayland-private PRIVATE ${WAYLAND_SRC_DIR})
+target_include_directories(
+        wayland-private PUBLIC
+        ${AUTOGEN_DIR}/include
+)
+
+target_include_directories(
+        wayland-private PRIVATE
+        ${WAYLAND_SRC_DIR}
+        ${AUTOGEN_DIR}/config
+)
 
 # wayland-server
 add_library(
@@ -146,9 +203,9 @@ target_link_libraries(
 )
 
 target_include_directories(
-        wayland-server PUBLIC
+        wayland-server PRIVATE
         ${WAYLAND_SRC_DIR}
-        ${AUTOGEN_DIR}
+        ${AUTOGEN_DIR}/config
 )
 
 # wayland-client
@@ -166,9 +223,9 @@ target_link_libraries(
 )
 
 target_include_directories(
-        wayland-client PUBLIC
+        wayland-client PRIVATE
         ${WAYLAND_SRC_DIR}
-        ${AUTOGEN_DIR}
+        ${AUTOGEN_DIR}/config
 )
 
 # wayland-cursor
@@ -179,23 +236,33 @@ add_library(
         ${WAYLAND_CURSOR_DIR}/xcursor.c
 )
 
-target_link_libraries(wayland-cursor PUBLIC wayland-client wayland-protocol-core)
+target_link_libraries(
+        wayland-cursor PUBLIC
+        wayland-client
+        wayland-protocol-core
+)
 
 target_include_directories(
-        wayland-cursor PUBLIC
+        wayland-cursor PRIVATE
         ${WAYLAND_CURSOR_DIR}
-        ${AUTOGEN_DIR}
         ${WAYLAND_SRC_DIR}
+        ${AUTOGEN_DIR}/config
 )
 
 # wayland-egl
-add_library(wayland-egl SHARED ${WAYLAND_EGL_DIR}/wayland-egl.c)
+add_library(
+        wayland-egl SHARED
+        ${WAYLAND_EGL_DIR}/wayland-egl.c
+)
 
-target_link_libraries(wayland-egl PUBLIC wayland-protocol-core)
+target_link_libraries(
+        wayland-egl PUBLIC
+        wayland-protocol-core
+)
 
 target_include_directories(
-        wayland-egl PUBLIC
+        wayland-egl PRIVATE
         ${WAYLAND_EGL_DIR}
-        ${AUTOGEN_DIR}
         ${WAYLAND_SRC_DIR}
+        ${AUTOGEN_DIR}/config
 )

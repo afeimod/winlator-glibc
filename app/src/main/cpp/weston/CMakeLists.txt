@@ -13,13 +13,13 @@ set(AUTOGEN_DIR ${WESTON_DIR}/autogen)
 set(PROTOCOL_INSTALL_DIR ${WESTON_DIR}/protocol)
 
 set(CONFIG_H_IN ${WESTON_DIR}/config.h.in)
-set(CONFIG_H_DEST ${AUTOGEN_DIR}/config.h)
+set(CONFIG_H_DEST ${AUTOGEN_DIR}/config/config.h)
 
 set(GIT_VERSION_H_IN ${WESTON_SRC_DIR}/git-version.h.meson)
-set(GIT_VERSION_H_DEST ${AUTOGEN_DIR}/git-version.h)
+set(GIT_VERSION_H_DEST ${AUTOGEN_DIR}/config/git-version.h)
 
 set(VERSION_H_IN ${WESTON_INCLUDE_DIR}/libweston/version.h.in)
-set(VERSION_H_DEST ${AUTOGEN_DIR}/libweston/version.h)
+set(VERSION_H_DEST ${AUTOGEN_DIR}/include/libweston/version.h)
 
 include(CheckFunctionExists)
 include(CheckIncludeFile)
@@ -27,7 +27,7 @@ include(CheckIncludeFile)
 # Check if need to update submodule
 check_repo(${WESTON_DIR}/repo)
 
-# Generate config.h
+# Check
 set(MAJOR_IN_SYSMACROS 1)
 set(MAJOR_IN_MKDEV 1)
 set(_GNU_SOURCE 1)
@@ -61,14 +61,24 @@ check_function_exists(memfd_create HAVE_MEMFD_CREATE)
 check_function_exists(unreachable HAVE_UNREACHABLE)
 check_include_file("linux/sync_file.h" HAVE_LINUX_SYNC_FILE_H)
 check_c_source_compiles("
-    int main(void) {return __builtin_clz(1);}
+    int main(int argc, char** argv) {return __builtin_clz(1);}
 " HAVE_BUILTIN_CLZ)
 check_c_source_compiles("
-    int main(void) {return __builtin_bswap32(0);}
+    int main(int argc, char** argv) {return __builtin_bswap32(0);}
 " HAVE_BUILTIN_BSWAP32)
 check_c_source_compiles("
-    int main(void) {return __builtin_popcount(0);}
+    int main(int argc, char** argv) {return __builtin_popcount(0);}
 " HAVE_BUILTIN_POPCOUNT)
+
+set(VCS_TAG ${WESTON_VERSION})
+
+file(MAKE_DIRECTORY ${PROTOCOL_INSTALL_DIR})
+file(MAKE_DIRECTORY ${AUTOGEN_DIR})
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/include)
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/include/libweston)
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/config)
+
+# Generate config.h
 configure_file(
         ${CONFIG_H_IN}
         ${CONFIG_H_DEST}
@@ -76,7 +86,6 @@ configure_file(
 )
 
 # Generate git-version.h
-set(VCS_TAG ${WESTON_VERSION})
 configure_file(
         ${GIT_VERSION_H_IN}
         ${GIT_VERSION_H_DEST}
@@ -95,7 +104,6 @@ configure_file(
 )
 
 # Install weston protocols
-file(MAKE_DIRECTORY ${PROTOCOL_INSTALL_DIR})
 file(GLOB_RECURSE WESTON_INTERNAL_PROTOCOLS "${WESTON_PROTOCOL_DIR}/*.xml")
 foreach (PROTOCOL_XML IN LISTS WESTON_INTERNAL_PROTOCOLS)
     get_filename_component(BASE_NAME ${PROTOCOL_XML} NAME_WE)
@@ -112,6 +120,29 @@ foreach (PROTOCOL_XML IN LISTS WESTON_INTERNAL_PROTOCOLS)
     target_include_directories(${TARGET_NAME} PUBLIC ${PROTOCOL_INSTALL_DIR})
 endforeach ()
 
+# Install headers
+set(WESTON_HEADERS
+        ${WESTON_INCLUDE_DIR}/libweston/config-parser.h
+        ${WESTON_INCLUDE_DIR}/libweston/libweston.h
+        ${WESTON_INCLUDE_DIR}/libweston/desktop.h
+        ${WESTON_INCLUDE_DIR}/libweston/matrix.h
+        ${WESTON_INCLUDE_DIR}/libweston/plugin-registry.h
+        ${WESTON_INCLUDE_DIR}/libweston/windowed-output-api.h
+        ${WESTON_INCLUDE_DIR}/libweston/weston-log.h
+        ${WESTON_INCLUDE_DIR}/libweston/zalloc.h
+        ${WESTON_INCLUDE_DIR}/libweston/remoting-plugin.h
+        ${WESTON_INCLUDE_DIR}/libweston/pipewire-plugin.h
+        ${WESTON_INCLUDE_DIR}/libweston/shell-utils.h
+        ${WESTON_INCLUDE_DIR}/libweston/backend-android.h
+)
+foreach (HEADER_FILE IN LISTS WESTON_HEADERS)
+    configure_file(
+            ${HEADER_FILE}
+            ${AUTOGEN_DIR}/include/libweston
+            COPYONLY
+    )
+endforeach ()
+
 # C args
 add_compile_options(
         -Wmissing-prototypes
@@ -123,24 +154,7 @@ add_compile_options(
         -fvisibility=hidden
 )
 
-# weston-public
-add_library(weston-public INTERFACE)
-
-target_include_directories(
-        weston-public INTERFACE
-        ${WESTON_INCLUDE_DIR}
-)
-
-target_link_libraries(
-        weston-public INTERFACE
-        wayland-server
-        pixman
-        xkbcommon
-        android
-        log
-)
-
-# weston-shared
+# libweston-shared
 add_library(
         weston-shared STATIC
         ${WESTON_SHARED_DIR}/config-parser.c
@@ -153,36 +167,21 @@ add_library(
 
 target_link_libraries(
         weston-shared PUBLIC
-        weston-public
         wayland-client
+        pixman
+        xkbcommon
+        egl
 )
 
 target_include_directories(
         weston-shared PUBLIC
-        ${WESTON_SHARED_DIR}
-        ${AUTOGEN_DIR}
-)
-
-# cairo-shared
-add_library(
-        cairo-shared STATIC
-        ${WESTON_SHARED_DIR}/image-loader.c
-        ${WESTON_SHARED_DIR}/cairo-util.c
-        ${WESTON_SHARED_DIR}/frame.c
-)
-
-target_link_libraries(
-        cairo-shared PUBLIC
-        wayland-util
-        wayland-client
-        cairo
-        pixman
+        ${AUTOGEN_DIR}/include
 )
 
 target_include_directories(
-        cairo-shared PUBLIC
-        ${WESTON_DIR}/repo
-        ${WESTON_DIR}/repo/include
+        weston-shared PRIVATE
+        ${AUTOGEN_DIR}/config
+        ${WESTON_SHARED_DIR}
 )
 
 # libweston
@@ -236,6 +235,10 @@ add_library(
 
 target_link_libraries(
         weston PUBLIC
+        wayland-server
+        pixman
+        xkbcommon
+        egl
         weston-shared
         # libweston
         weston-color-management-v1
@@ -265,12 +268,39 @@ target_link_libraries(
 
 target_include_directories(
         weston PUBLIC
-        ${AUTOGEN_DIR}
+        ${AUTOGEN_DIR}/include
+)
+
+target_include_directories(
+        weston PRIVATE
+        ${AUTOGEN_DIR}/config
         ${WESTON_SRC_DIR}
         ${WESTON_DIR}/repo
 )
 
-# gl-borders
+# libcairo-shared
+add_library(
+        cairo-shared STATIC
+        ${WESTON_SHARED_DIR}/image-loader.c
+        ${WESTON_SHARED_DIR}/cairo-util.c
+        ${WESTON_SHARED_DIR}/frame.c
+)
+
+target_link_libraries(
+        cairo-shared PUBLIC
+        weston-shared
+        cairo
+        png
+        pixman
+)
+
+target_include_directories(
+        cairo-shared PRIVATE
+        ${AUTOGEN_DIR}/config
+        ${WESTON_DIR}/repo
+)
+
+# libgl-borders
 add_library(
         gl-borders STATIC
         ${WESTON_SRC_DIR}/gl-borders.c
@@ -278,18 +308,23 @@ add_library(
 
 target_link_libraries(
         gl-borders PUBLIC
-        egl
         cairo-shared
-        weston-public
+        egl
 )
 
 target_include_directories(
         gl-borders PUBLIC
-        ${WESTON_SRC_DIR}
-        ${WESTON_DIR}/repo
+        ${AUTOGEN_DIR}/include
 )
 
-# backend-android
+target_include_directories(
+        gl-borders PRIVATE
+        ${WESTON_SRC_DIR}
+        ${WESTON_DIR}/repo
+        ${AUTOGEN_DIR}/config
+)
+
+# libbackend-android
 add_library(
         backend-android SHARED
         ${WESTON_SRC_DIR}/backend-android/android.c
@@ -303,9 +338,16 @@ target_link_libraries(
         weston-wrapper-shared
 )
 
+target_include_directories(
+        backend-android PRIVATE
+        ${WESTON_SRC_DIR}
+        ${WESTON_DIR}/repo
+        ${AUTOGEN_DIR}/config
+)
+
 set_target_properties(backend-android PROPERTIES PREFIX "")
 
-# frontend-android
+# libfrontend-android
 add_library(
         frontend-android STATIC
         ${WESTON_DIR}/repo/frontend/android.c
@@ -316,7 +358,12 @@ target_link_libraries(
         weston
 )
 
-# fullscreen-shell
+target_include_directories(
+        frontend-android PRIVATE
+        ${AUTOGEN_DIR}/config
+)
+
+# libfullscreen-shell
 add_library(
         fullscreen-shell SHARED
         ${WESTON_DIR}/repo/fullscreen-shell/fullscreen-shell.c
@@ -331,14 +378,19 @@ target_link_libraries(
 
 target_include_directories(
         fullscreen-shell PUBLIC
-        ${AUTOGEN_DIR}
+        ${AUTOGEN_DIR}/include
+)
+
+target_include_directories(
+        fullscreen-shell PRIVATE
         ${WESTON_SRC_DIR}
         ${WESTON_DIR}/repo
+        ${AUTOGEN_DIR}/config
 )
 
 set_target_properties(fullscreen-shell PROPERTIES PREFIX "")
 
-# desktop-shell
+# libdesktop-shell
 add_library(
         desktop-shell SHARED
         ${WESTON_DIR}/repo/desktop-shell/shell.c
@@ -355,9 +407,15 @@ target_link_libraries(
 
 target_include_directories(
         desktop-shell PUBLIC
-        ${AUTOGEN_DIR}
+        ${AUTOGEN_DIR}/include
+)
+
+target_include_directories(
+        desktop-shell PRIVATE
         ${WESTON_SRC_DIR}
+        ${WESTON_INCLUDE_DIR}
         ${WESTON_DIR}/repo
+        ${AUTOGEN_DIR}/config
 )
 
 set_target_properties(desktop-shell PROPERTIES PREFIX "")

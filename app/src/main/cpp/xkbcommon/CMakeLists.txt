@@ -10,7 +10,7 @@ set(XKBCOMMON_PARSER_DIR ${XKBCOMMON_DIR}/parser)
 set(AUTOGEN_DIR ${XKBCOMMON_DIR}/autogen)
 
 set(CONFIG_H_IN ${XKBCOMMON_DIR}/config.h.in)
-set(CONFIG_H_DEST ${AUTOGEN_DIR}/config.h)
+set(CONFIG_H_DEST ${AUTOGEN_DIR}/config/config.h)
 
 include(CheckFunctionExists)
 include(CheckIncludeFile)
@@ -20,7 +20,7 @@ include(CheckSymbolExists)
 # Check if need to update submodule
 check_repo(${XKBCOMMON_DIR}/repo)
 
-# Generate config.h
+# Check
 set(EXIT_INVALID_USAGE 2)
 set(LIBXKBCOMMON_VERSION ${XKBCOMMON_VERSION})
 set(LIBXKBCOMMON_TOOL_PATH 0)
@@ -47,21 +47,45 @@ check_symbol_exists(strndup "string.h" HAVE_STRNDUP)
 check_symbol_exists(asprintf "stdio.h" HAVE_ASPRINTF)
 check_symbol_exists(vasprintf "stdio.h" HAVE_VASPRINTF)
 check_symbol_exists(secure_getenv "stdlib.h" HAVE_SECURE_GETENV)
-if (NOT DEFINED HAVE_SECURE_GETENV)
+if (NOT HAVE_SECURE_GETENV)
     check_symbol_exists(__secure_getenv "stdlib.h" HAVE___SECURE_GETENV)
 endif ()
 check_symbol_exists(PATH_MAX "limits.h" HAVE_PATH_MAX)
-if (DEFINED HAVE_PATH_MAX)
+if (HAVE_PATH_MAX)
     set(PATH_MAX 4096)
 endif ()
 check_c_source_compiles("
-        int main(){if(__builtin_expect(1<0,0)){}}
+        int main(int argc, char** argv){if(__builtin_expect(1<0,0)){}}
 " HAVE___BUILTIN_EXPECT)
+
+file(MAKE_DIRECTORY ${AUTOGEN_DIR})
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/include)
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/include/xkbcommon)
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/config)
+
+# Generate config.h
 configure_file(
         ${CONFIG_H_IN}
         ${CONFIG_H_DEST}
         @ONLY
 )
+
+# Install headers
+set(XKBCOMMON_HEADERS
+        ${XKBCOMMON_INCLUDE_DIR}/xkbcommon/xkbcommon.h
+        ${XKBCOMMON_INCLUDE_DIR}/xkbcommon/xkbcommon-compat.h
+        ${XKBCOMMON_INCLUDE_DIR}/xkbcommon/xkbcommon-compose.h
+        ${XKBCOMMON_INCLUDE_DIR}/xkbcommon/xkbcommon-keysyms.h
+        ${XKBCOMMON_INCLUDE_DIR}/xkbcommon/xkbcommon-names.h
+        ${XKBCOMMON_INCLUDE_DIR}/xkbcommon/xkbregistry.h
+)
+foreach (HEADER_FILE IN LISTS XKBCOMMON_HEADERS)
+    configure_file(
+            ${HEADER_FILE}
+            ${AUTOGEN_DIR}/include/xkbcommon
+            COPYONLY
+    )
+endforeach ()
 
 # C args
 add_compile_options(
@@ -82,6 +106,7 @@ add_compile_options(
         -Wdate-time
         -Wwrite-strings
         -Wno-documentation-deprecated-sync
+        -Wno-return-type
 )
 
 # libxkbcommon
@@ -120,12 +145,14 @@ add_library(
         ${XKBCOMMON_SRC_DIR}/utils.c
 )
 
-target_include_directories(xkbcommon PUBLIC ${XKBCOMMON_INCLUDE_DIR})
+target_include_directories(
+        xkbcommon PUBLIC
+        ${AUTOGEN_DIR}/include
+)
 
 target_include_directories(
         xkbcommon PRIVATE
         ${XKBCOMMON_SRC_DIR}
-        ${AUTOGEN_DIR}
+        ${AUTOGEN_DIR}/config
         ${XKBCOMMON_PARSER_DIR}
 )
-

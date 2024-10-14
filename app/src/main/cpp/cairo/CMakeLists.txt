@@ -10,10 +10,10 @@ set(CAIRO_TEST_DIR ${CAIRO_DIR}/repo/meson-cc-tests)
 set(AUTOGEN_DIR ${CAIRO_DIR}/autogen)
 
 set(CAIRO_CONFIG_H_IN ${CAIRO_DIR}/config.h.in)
-set(CAIRO_CONFIG_H_DEST ${AUTOGEN_DIR}/config.h)
+set(CAIRO_CONFIG_H_DEST ${AUTOGEN_DIR}/config/config.h)
 
 set(CAIRO_FEATURES_H_IN ${CAIRO_DIR}/cairo-features.h.in)
-set(CAIRO_FEATURES_H_DEST ${AUTOGEN_DIR}/cairo-features.h)
+set(CAIRO_FEATURES_H_DEST ${AUTOGEN_DIR}/include/cairo-features.h)
 
 include(CheckFunctionExists)
 include(CheckIncludeFile)
@@ -23,7 +23,7 @@ include(CheckTypeSize)
 # Check if need to update submodule
 check_repo(${CAIRO_DIR}/repo)
 
-# Generate config.h
+# Check
 set(HAVE_MKDIR "0")
 set(HAS_PIXMAN_GLYPHS 1)
 set(HAS_PIXMAN_r8g8b8_sRGB 1)
@@ -70,19 +70,13 @@ check_function_exists("feclearexcept" HAVE_FECLEAREXCEPT)
 check_function_exists("strndup" HAVE_STRNDUP)
 file(READ "${CAIRO_TEST_DIR}/pthread.c" SOURCE_CODE)
 check_c_source_compiles("${SOURCE_CODE}" CAIRO_HAS_PTHREAD)
-if (DEFINED CAIRO_HAS_PTHREAD)
+if (CAIRO_HAS_PTHREAD)
     set(CAIRO_HAS_REAL_PTHREAD 1)
 endif ()
 file(READ "${CAIRO_TEST_DIR}/atomic-ops-c11.c" SOURCE_CODE)
 check_c_source_compiles("${SOURCE_CODE}" HAVE_C11_ATOMIC_PRIMITIVES)
 check_function_exists("dlsym" CAIRO_HAS_DLSYM)
-configure_file(
-        ${CAIRO_CONFIG_H_IN}
-        ${CAIRO_CONFIG_H_DEST}
-        @ONLY
-)
 
-# Generate cairo-features.h
 set(CAIRO_HAS_IMAGE_SURFACE 1)
 set(CAIRO_FEATURES_H 1)
 set(CAIRO_HAS_USER_FONT 1)
@@ -91,11 +85,38 @@ set(CAIRO_HAS_RECORDING_SURFACE 1)
 set(CAIRO_HAS_OBSERVER_SURFACE 1)
 set(CAIRO_HAS_SVG_SURFACE 1)
 set(CAIRO_HAS_PNG_FUNCTIONS 1)
+
+file(MAKE_DIRECTORY ${AUTOGEN_DIR})
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/config)
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/include)
+
+# Generate config.h
+configure_file(
+        ${CAIRO_CONFIG_H_IN}
+        ${CAIRO_CONFIG_H_DEST}
+        @ONLY
+)
+
+# Generate cairo-features.h
 configure_file(
         ${CAIRO_FEATURES_H_IN}
         ${CAIRO_FEATURES_H_DEST}
         @ONLY
 )
+
+# Install headers
+set(CAIRO_HEADERS
+        ${CAIRO_SRC_DIR}/cairo.h
+        ${CAIRO_SRC_DIR}/cairo-version.h
+        ${CAIRO_SRC_DIR}/cairo-deprecated.h
+)
+foreach (HEADER_FILE IN LISTS CAIRO_HEADERS)
+    configure_file(
+            ${HEADER_FILE}
+            ${AUTOGEN_DIR}/include
+            COPYONLY
+    )
+endforeach ()
 
 # C args
 add_compile_options(
@@ -264,9 +285,11 @@ target_link_libraries(
 
 target_include_directories(
         cairo PUBLIC
-        ${CAIRO_SRC_DIR}
-        ${AUTOGEN_DIR}
+        ${AUTOGEN_DIR}/include
 )
 
-
-
+target_include_directories(
+        cairo PRIVATE
+        ${AUTOGEN_DIR}/config
+        ${CAIRO_SRC_DIR}
+)

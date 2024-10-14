@@ -36,6 +36,9 @@ include(TestBigEndian)
 # Check if need to update submodule
 check_repo(${GLIB_DIR}/repo)
 
+# Only aarch64
+aarch64_only()
+
 # Check for versions
 string(REPLACE "." ";" VERSION_LIST "${GLIB_VERSION}")
 list(GET VERSION_LIST 0 GLIB_MAJOR_VERSION)

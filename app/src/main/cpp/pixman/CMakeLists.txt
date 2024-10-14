@@ -9,10 +9,10 @@ set(PIXMAN_SRC_DIR ${PIXMAN_DIR}/repo/pixman)
 set(AUTOGEN_DIR ${PIXMAN_DIR}/autogen)
 
 set(PIXMAN_CONFIG_H_IN ${PIXMAN_DIR}/pixman-config.h.in)
-set(PIXMAN_CONFIG_H_DEST ${AUTOGEN_DIR}/pixman-config.h)
+set(PIXMAN_CONFIG_H_DEST ${AUTOGEN_DIR}/config/pixman-config.h)
 
 set(PIXMAN_VERSION_H_IN ${PIXMAN_SRC_DIR}/pixman-version.h.in)
-set(PIXMAN_VERSION_H_DEST ${AUTOGEN_DIR}/pixman-version.h)
+set(PIXMAN_VERSION_H_DEST ${AUTOGEN_DIR}/include/pixman-version.h)
 
 include(CheckFunctionExists)
 include(CheckIncludeFile)
@@ -29,7 +29,7 @@ check_repo(${PIXMAN_DIR}/repo)
 # Only aarch64
 aarch64_only()
 
-# Generate config.h
+# Check
 set(USE_LOONGSON_MMI 0)
 set(USE_X86_MMX 0)
 set(USE_SSE2 0)
@@ -43,7 +43,7 @@ set(PIXMAN_GNUPLOT 0)
 set(HAVE_LIBPNG 0)
 set(WORDS_BIGENDIAN 0)
 set(PACKAGE foo)
-if (DEFINED OpenMP_FOUND)
+if (OpenMP_FOUND)
     set(USE_OPENMP 1)
 else ()
     set(USE_OPENMP 0)
@@ -101,17 +101,18 @@ check_c_source_compiles("
         #error \"Need GCC >= 4.8 for IWMMXT intrinsics\"
         #endif
         #include <mmintrin.h>
-        int main () {
+        int main (int argc, char** argv) {
           union {
             __m64 v;
             char c[8];
           } a = { .c = {1, 2, 3, 4, 5, 6, 7, 8} };
           int b = 4;
           __m64 c = _mm_srli_si64 (a.v, b);
+          return 0;
         }
 " USE_ARM_IWMMXT)
 check_c_source_compiles("
-      int main () {
+      int main (int argc, char** argv) {
         /* Most modern architectures have a NOP instruction, so this is a fairly generic test. */
         asm volatile (\"nop\");
         return 0;
@@ -120,7 +121,7 @@ check_c_source_compiles("
 check_c_source_compiles("
         #define _GNU_SOURCE
         #include <fenv.h>
-        int main() {
+        int main(int argc, char** argv) {
             feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
             return 0;
         }
@@ -129,22 +130,28 @@ check_c_source_compiles("
     #include <stdio.h>
     __thread int tls_var = 0;
 " TLS)
-if (DEFINED TLS)
+if (TLS)
     set(TLS __thread)
 endif ()
 check_c_source_compiles("
     static int x = 1;
     static void __attribute__((constructor)) constructor_function () { x = 0; }
-    int main (void) { return x; }
+    int main (int argc, char** argv) { return x; }
 " TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR)
 check_c_source_compiles("
     __float128 a = 1.0Q, b = 2.0Q;
-    int main (void) { return a + b; }
+    int main (int argc, char** argv) { return a + b; }
 " HAVE_FLOAT128)
 check_c_source_compiles("
     unsigned int __attribute__ ((vector_size(16))) e, a, b;
-    int main (void) { e = a - ((b << 27) + (b >> (32 - 27))) + 1; return e[0]; }
+    int main (int argc, char** argv) { e = a - ((b << 27) + (b >> (32 - 27))) + 1; return e[0]; }
 " HAVE_GCC_VECTOR_EXTENSIONS)
+
+file(MAKE_DIRECTORY ${AUTOGEN_DIR})
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/config)
+file(MAKE_DIRECTORY ${AUTOGEN_DIR}/include)
+
+# Generate config.h
 configure_file(
         ${PIXMAN_CONFIG_H_IN}
         ${PIXMAN_CONFIG_H_DEST}
@@ -162,6 +169,13 @@ configure_file(
         @ONLY
 )
 
+# Install pixman.h
+configure_file(
+        ${PIXMAN_SRC_DIR}/pixman.h
+        ${AUTOGEN_DIR}/include
+        COPYONLY
+)
+
 # C args
 add_compile_options(
         -std=gnu99
@@ -172,6 +186,7 @@ add_compile_options(
         -Wundef
         -ftrapping-math
         -Wno-unused-local-typedefs
+        -Wno-unknown-attributes
         -DHAVE_CONFIG_H
 )
 
@@ -182,7 +197,10 @@ add_library(
         ${PIXMAN_SRC_DIR}/pixman-arma64-neon-asm-bilinear.S
 )
 
-target_include_directories(pixman-arm-neon PRIVATE ${AUTOGEN_DIR})
+target_include_directories(
+        pixman-arm-neon PRIVATE
+        ${AUTOGEN_DIR}/config
+)
 
 # libpixman
 add_library(
@@ -219,6 +237,18 @@ add_library(
         ${PIXMAN_SRC_DIR}/pixman-utils.c
 )
 
-target_link_libraries(pixman PRIVATE pixman-arm-neon)
+target_link_libraries(
+        pixman PUBLIC
+        pixman-arm-neon
+)
 
-target_include_directories(pixman PUBLIC ${PIXMAN_SRC_DIR} ${AUTOGEN_DIR})
+target_include_directories(
+        pixman PUBLIC
+        ${AUTOGEN_DIR}/include
+)
+
+target_include_directories(
+        pixman PRIVATE
+        ${PIXMAN_SRC_DIR}
+        ${AUTOGEN_DIR}/config
+)
