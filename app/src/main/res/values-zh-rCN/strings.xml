@@ -288,6 +288,7 @@
     <string name="do_you_want_to_reconfigure_wine">您想要在下一次启动时重新配置容器吗? 这将删除时间戳以触发Wine配置。</string>
 
     <!-- OpenXR specific text -->
+    <string name="use_xr">使用 OpenXR 集成</string>
     <string name="toggle_orientation">切换方向</string>
     <string name="primary_controller">主控制器</string>
     <string name="left_controller">左控制器</string>
