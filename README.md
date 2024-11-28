@@ -1,3 +1,43 @@
+# Winlator-Glibc
+
+Winlator-Glibc is a fork of the official Winlator. The Glibc version provides additional performance and stability improvements.
+The goal is to provide more community friendly alternative. Collaboration are welcome.
+
+This fork also represents the WinlatorXR version which runs the app in virtual headsets.
+
+# Device requirement
+* Android 8 or newer with ARM64 CPU
+* Compatible GPU (Adreno GPUs have the best support)
+* Legacy storage support (according to reports Coloros 15 and Oxygenos 15 are unsupported)
+
+# Compiling
+
+1. Clone the repository (requires `git` and `git-lfs` installed)
+```
+git clone git@github.com:longjunyu2/winlator.git
+cd winlator
+git submodule update --init --recursive
+git lfs pull
+```
+
+2. Open the project in the Android Studio (we target latest stable version)
+
+3. Install dependencies the Android Studio asks for
+
+4. Connect your phone via USB with USB debugging enabled
+
+5. Click run (green play icon)
+
+# Links
+- [Project downloads](https://github.com/longjunyu2/winlator/releases)
+- [Project milestones](https://github.com/longjunyu2/winlator/milestones)
+- [WinlatorXR on SideQuest](https://sidequestvr.com/app/37320/winlatorxr)
+
+# Credits and Third-party apps
+- Termux-pacman ([github.com/termux-pacman/glibc-packages](https://github.com/termux-pacman/glibc-packages))
+
+---
+
 <p align="center">
 	<img src="logo.png" width="376" height="128" alt="Winlator Logo" />  
 </p>

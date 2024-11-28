@@ -216,10 +216,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             tvCreditsAndThirdPartyApps.setMovementMethod(LinkMovementMethod.getInstance());
 
             String glibcExpVersionForkHTML = String.join("<br />",
-                    "longjunyu2's <a href=\"https://github.com/longjunyu2/winlator/tree/use-glibc-instead-of-proot\">(Fork)</a>");
+                    "longjunyu2's (<a href=\"https://github.com/longjunyu2/winlator/\">Fork</a>)");
             TextView tvGlibcExpVersionFork = dialog.findViewById(R.id.TVGlibcExpVersionFork);
             tvGlibcExpVersionFork.setText(Html.fromHtml(glibcExpVersionForkHTML, Html.FROM_HTML_MODE_LEGACY));
             tvGlibcExpVersionFork.setMovementMethod(LinkMovementMethod.getInstance());
+
+
+            String glibcTermuxPacman = String.join("<br />",
+                    "Termux-pacman (<a href=\"https://github.com/termux-pacman/glibc-packages\">github.com/termux-pacman/glibc-packages</a>)");
+            TextView tvGlibcTermuxPacman = dialog.findViewById(R.id.TVGlibcTermuxPacman);
+            tvGlibcTermuxPacman.setText(Html.fromHtml(glibcTermuxPacman, Html.FROM_HTML_MODE_LEGACY));
+            tvGlibcTermuxPacman.setMovementMethod(LinkMovementMethod.getInstance());
         }
         catch (PackageManager.NameNotFoundException e) {}
 
