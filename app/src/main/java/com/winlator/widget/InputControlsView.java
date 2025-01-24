@@ -2,6 +2,7 @@ package com.winlator.widget;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -13,12 +14,16 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.PointerIcon;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+
+import androidx.preference.PreferenceManager;
 
 import com.winlator.R;
 import com.winlator.inputcontrols.Binding;
@@ -57,6 +62,8 @@ public class InputControlsView extends View {
     private final Bitmap[] icons = new Bitmap[17];
     private Timer mouseMoveTimer;
     private final PointF mouseMoveOffset = new PointF();
+    private Vibrator vibrator;
+    private VibrationEffect effect;
     private boolean showTouchscreenControls = true;
 
     @SuppressLint("ResourceType")
@@ -68,6 +75,14 @@ public class InputControlsView extends View {
         setBackgroundColor(0x00000000);
         setPointerIcon(PointerIcon.load(getResources(), R.drawable.hidden_pointer_arrow));
         setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if (preferences.getBoolean("haptics", true)) {
+            vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            effect = VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE);
+        } else {
+            vibrator = null;
+        }
     }
 
     public void setEditMode(boolean editMode) {
@@ -375,7 +390,12 @@ public class InputControlsView extends View {
 
                     touchpadView.setPointerButtonLeftEnabled(true);
                     for (ControlElement element : profile.getElements()) {
-                        if (element.handleTouchDown(pointerId, x, y)) handled = true;
+                        if (element.handleTouchDown(pointerId, x, y)) {
+                            if (vibrator != null) {
+                                vibrator.vibrate(effect);
+                            }
+                            handled = true;
+                        }
                         if (element.getBindingAt(0) == Binding.MOUSE_LEFT_BUTTON) {
                             touchpadView.setPointerButtonLeftEnabled(false);
                         }

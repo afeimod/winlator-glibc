@@ -171,6 +171,9 @@ public class SettingsFragment extends Fragment {
                 AppUtils.showToast(context, R.string.cannot_remove_default_sound_font);
         });
 
+        final CheckBox cbHaptics = view.findViewById(R.id.CBHaptics);
+        cbHaptics.setChecked(preferences.getBoolean("haptics", true));
+
         final CheckBox cbUseDRI3 = view.findViewById(R.id.CBUseDRI3);
         cbUseDRI3.setChecked(preferences.getBoolean("use_dri3", true));
 
@@ -242,6 +245,7 @@ public class SettingsFragment extends Fragment {
             editor.putString("box64_version", StringUtils.parseIdentifier(sBox64Version.getSelectedItem()));
             editor.putString("box86_preset", Box86_64PresetManager.getSpinnerSelectedId(sBox86Preset));
             editor.putString("box64_preset", Box86_64PresetManager.getSpinnerSelectedId(sBox64Preset));
+            editor.putBoolean("haptics", cbHaptics.isChecked());
             editor.putBoolean("use_dri3", cbUseDRI3.isChecked());
             editor.putBoolean("use_xr", cbUseXR.isChecked());
             editor.putFloat("cursor_speed", sbCursorSpeed.getProgress() / 100.0f);
