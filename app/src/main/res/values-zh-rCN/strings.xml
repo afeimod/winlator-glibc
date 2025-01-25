@@ -26,6 +26,7 @@
     <string name="shape">形状</string>
     <string name="type">类型</string>
     <string name="binding">绑定</string>
+    <string name="binding_secondary">二次绑定</string>
     <string name="binding_up">绑定 向上</string>
     <string name="binding_right">绑定 向右</string>
     <string name="binding_down">绑定 向下</string>
