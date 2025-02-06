@@ -27,6 +27,7 @@
   { "type": "Turnip", "verName": "25.0.0", "verCode": 5, "remoteUrl": "https://hub.myxuebi.top/K11MCH1/WinlatorTurnipDrivers/releases/download/winlator_v25.0_r5/turnip-v25.0.0-R5.wcp" },
   { "type": "Turnip", "verName": "25.0.0.8", "verCode": 8, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents/turnip-v25.0.0-R8.wcp" },
   { "type": "Turnip", "verName": "25.0.0.t2", "verCode": 2, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents2/turnip-v25.0.0-T2.wcp" },
+  { "type": "Turnip", "verName": "25.1.0", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents2/turnip-v25.1.0-R1.wcp" },
   { "type": "Wine", "verName": "9.2-custom", "verCode": 2, "remoteUrl": "https://hub.myxuebi.top/longjunyu2/winlator/releases/download/v7.1.3/wine-9.2-custom.wcp" },
   { "type": "Wine", "verName": "9.21-custom", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents/wine-9.21.wcp" },
   { "type": "Wine", "verName": "9.16-custom", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents/wine-9.16-custom.wcp" },
