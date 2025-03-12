@@ -6,6 +6,7 @@
   { "type": "Box64", "verName": "0.3.2", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents/box64-0.3.2.wcp" },
   { "type": "Box64", "verName": "latest-1456897", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents/box64-latest-1456897.wcp" },
   { "type": "Box64", "verName": "0.3.3latest", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents/box64-0.3.3latest-.wcp" },
+  { "type": "Box64", "verName": "0.3.4.1", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents2/box64-0.3.4.1.wcp" },
   { "type": "VKD3D", "verName": "2.14", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents/vkd3d-proton-2.14.wcp" },
   { "type": "VKD3D", "verName": "2.14.1", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents/vkd3d-proton-2.14.1.wcp" },
   { "type": "DXVK", "verName": "0.40.1", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents/dxvk-0.40.1.wcp" },
