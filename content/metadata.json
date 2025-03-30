@@ -21,6 +21,8 @@
   { "type": "DXVK", "verName": "2.5.3", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents2/dxvk-2.5.3.wcp" },
   { "type": "DXVK", "verName": "2.5.3-special", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents2/dxvk-2.5.3-special.wcp" },
   { "type": "DXVK", "verName": "2.5.3.3-1", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents2/dxvk-2.5.3.3-1.wcp" },
+  { "type": "DXVK", "verName": "2.6", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents2/dxvk-2.6.wcp" },
+  { "type": "DXVK", "verName": "2.6-GPL", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents2/dxvk-v2.6-GPL.wcp" },
   { "type": "Turnip", "verName": "23.1.6", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents/turnip-23.1.6.wcp" },
   { "type": "Turnip", "verName": "23.3.0", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/longjunyu2/winlator/releases/download/v7.1.2/turnip-23.3.0.wcp" },
   { "type": "Turnip", "verName": "23.3.0fix", "verCode": 1, "remoteUrl": "https://hub.myxuebi.top/afeimod/winlator-glibc/releases/download/contents/turnip-23.3.0fix.wcp" },
